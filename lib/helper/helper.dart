@@ -14,6 +14,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 String userToken = '';
 bool isDarkModeEnabledLocal = true;
 bool viewedSlider = false;
+String allowsVOIP = '';
+String carrierName = '';
+String isoCountryCode = '';
+String countryCode = '';
+String mobileCountryCode = '';
+String mobileNetworkCode = '';
 
 List<BoxShadow> elevation({required Color color, required int elevation}) {
   return [
@@ -375,18 +381,18 @@ InputDecoration textDecorNoBorder(
     hintStyle: appStyle(size: hintSize, col: hintColor, weight: hintWeight,family:family ),
     alignLabelWithHint: true,
     enabledBorder: OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.transparent, width: 1),
+      borderSide: BorderSide(color: themeAppColors(), width: 1),
      borderRadius: BorderRadius.circular(radius),
     ),
     focusedBorder: OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.transparent, width: 1),
+      borderSide: BorderSide(color: themeAppColors(), width: 1),
      borderRadius: BorderRadius.circular(radius),
     ),
     focusColor: dPurple,
     enabled: enabled,
     labelStyle: appStyle(size: hintSize),
     filled: true,
-    fillColor: fill ?? Colors.white,
+    fillColor: themeAppBarColors(),
     contentPadding: padding,
   );
 }
@@ -530,6 +536,9 @@ Future<dynamic> getPref(key, {type = 'string'}) async {
   switch (type) {
     case 'string':
       return sp.getString(key);
+      break;
+    case 'bool':
+      return sp.getBool(key);
       break;
     case 'list':
       List<String> aList = [];

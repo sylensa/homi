@@ -30,13 +30,15 @@ class _IntroductionPageState extends State<IntroductionPage> {
   Widget build(BuildContext context) {
     const bodyStyle = TextStyle(fontSize: 19.0);
 
-    const pageDecoration =  PageDecoration(
-      titleTextStyle: TextStyle(fontSize: 28.0, fontWeight: FontWeight.w700),
-      bodyTextStyle: bodyStyle,
+
+    PageDecoration  pageDecoration =  PageDecoration(
+      titleTextStyle: TextStyle(fontSize: 28.0, fontWeight: FontWeight.w700,color:  themeAppBarColors()),
+      bodyTextStyle: TextStyle(fontSize: 19.0, fontWeight: FontWeight.w700,color:  themeAppBarColors()),
       descriptionPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
       pageColor: Colors.white,
       imagePadding: EdgeInsets.zero,
     );
+
 
     return IntroductionScreen(
       key: introKey,
@@ -58,7 +60,7 @@ class _IntroductionPageState extends State<IntroductionPage> {
           padding: appPadding(20),
           width: appWidth(context),
           color: dPurple,
-          child:  sText('Let\'s go right away!',size: 16,weight: FontWeight.bold,color: Colors.white,align: TextAlign.center),
+          child:  sText('Let\'s go right away!',size: 16,weight: FontWeight.bold,align: TextAlign.center),
         ),
       ),
       pages: [
@@ -68,6 +70,8 @@ class _IntroductionPageState extends State<IntroductionPage> {
           "Instead of having to buy an entire share, invest any amount you want.",
           image: _buildImage('img1.png'),
           decoration: pageDecoration,
+
+
         ),
         PageViewModel(
           title: "Learn as you go",
@@ -92,10 +96,7 @@ class _IntroductionPageState extends State<IntroductionPage> {
             onPressed: () {
               goTo(context, Index(initialIndex: 0,));
             },
-            child: const Text(
-              'Done',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: sText("Done"),
             style: ElevatedButton.styleFrom(
               primary: dPurple,
               shape: RoundedRectangleBorder(

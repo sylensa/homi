@@ -60,6 +60,9 @@ class _MoviePageState extends State<MoviePage> {
         title:sText("Movie Name",color: themeAppColors(),weight: FontWeight.w700,size: 22,family: "ProximaBold"),
         elevation: 0,
         centerTitle: false,
+        leading: IconButton(onPressed: (){
+          Navigator.pop(context);
+        }, icon: Icon(Icons.arrow_back_ios,color: themeAppColors(),)),
         actions: [
           Icon(Icons.search,color: themeAppColors(),),
           Container(

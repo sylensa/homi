@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
 import 'package:homi/helper/video_feed_player.dart';
 import 'package:homi/screens/movie/index.dart';
+import 'package:video_box/video.controller.dart';
 import 'package:video_box/video_box.dart';
 
 class HomePage extends StatefulWidget {
@@ -56,7 +57,7 @@ class _HomePageState extends State<HomePage> {
     // TODO: implement initState
     super.initState();
     for (var i = 0; i < 2; i++) {
-      vcs.add(VideoController(source: VideoPlayerController.network("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"),autoplay: true,volume: 0)
+      vcs.add(VideoController(source: VideoPlayerController.network("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"),autoplay: true,volume: 0,)
         ..initialize());
     }
   }
@@ -106,9 +107,10 @@ class _HomePageState extends State<HomePage> {
                       enableInfiniteScroll: false,
                       autoPlayAnimationDuration: Duration(seconds: 1),
                       enlargeCenterPage: false,
-                      viewportFraction: 1.0,
+                      viewportFraction: 2.7,
                       aspectRatio: 2.0,
                       pageSnapping: true,
+
                       onPageChanged: (index, reason) {
                         setState(() {
                           _currentSlide = index;
@@ -117,19 +119,17 @@ class _HomePageState extends State<HomePage> {
                     ),
                     itemCount: vcs.length,
                     itemBuilder: (BuildContext context, int index, int index2) {
-                      return Padding(
+                      return Container(
+                        width: appWidth(context),
                         padding: const EdgeInsets.only(top: 12.0),
-                        child: AspectRatio(
-                          aspectRatio: 16 / 9,
-                          child: VideoBox(
-                            customLoadingWidget: Container(),
-                            controller:vcs[index],
+                        child: VideoBox(
+                          customLoadingWidget: Container(),
+                          controller:vcs[index],
 
-                            background: Container(
-                                width: appWidth(context),
-                                child: Image.network("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg",fit: BoxFit.fitWidth,)),
-                            // cover: sText("${VideoController(source: VideoPlayerController.network(url),autoplay: true,initPosition: Duration(minutes: 9)).positionText}"),
-                          ),
+                          background: Container(
+                              width: appWidth(context),
+                              child: Image.network("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg",fit: BoxFit.fitWidth,)),
+                          // cover: sText("${VideoController(source: VideoPlayerController.network(url),autoplay: true,initPosition: Duration(minutes: 9)).positionText}"),
                         ),
                       );
                     }),
@@ -149,6 +149,58 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 SizedBox(height: 10,),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 10,),
+                    Container(
+                      margin: leftPadding(10),
+                      child: sText("Continue Watching",weight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10,),
+                    Container(
+                      height: 150,
+                      child: ListView.builder(
+                          itemCount: 10,
+                          shrinkWrap: true,
+                          physics: ClampingScrollPhysics(),
+                          scrollDirection: Axis.horizontal,
+                          itemBuilder: (BuildContext context, int index){
+                            return  GestureDetector(
+                              onTap: (){
+                                goTo(context, MoviePage(url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",));
+                              },
+                              child: Row(
+                                children: [
+                                  SizedBox(width: 10,),
+                                  Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(5.0),
+                                        child: Container(
+                                          height: 150,
+                                          child: Image.asset("assets/images/pabi at ledge.jpg",width: 200,fit: BoxFit.fitHeight,),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 0,
+                                        child: Container(
+                                            width: 200,
+                                            height: 5,
+                                            decoration: BoxDecoration(
+                                                color: Colors.red,
+                                            ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                    ),
+                  ],
+                ),
                 for(int i =0; i < 11; i++)
                  Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,16 +228,19 @@ class _HomePageState extends State<HomePage> {
                       SizedBox(width: 10,),
                       Stack(
                         children: [
-                          Container(
-                            height: 150,
-                            child: Image.asset("assets/images/pabi at ledge.jpg",width: 100,fit: BoxFit.fitHeight,),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(5.0),
+                            child: Container(
+                              height: 150,
+                              child: Image.asset("assets/images/pabi at ledge.jpg",width: 100,fit: BoxFit.fitHeight,),
+                            ),
                           ),
                           Positioned(
                             right: 0,
                             child: Container(
                                 padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),
                                 decoration: BoxDecoration(
-                                  color: Colors.black26,
+                                  color: Colors.black12,
                                   borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
                                 ),
                                 child: Icon(Icons.more_vert,color: dPurple,)
