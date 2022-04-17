@@ -20,62 +20,55 @@ class _CategoryPageState extends State<CategoryPage> {
       appBar: AppBar(
         backgroundColor: themeAppBarColors(),
 
-        title: Row(
-          children: [
-            displayImage("imagePath",width: 30,height: 30),
-            SizedBox(width: 10,),
-            sText("Category",color: themeAppColors(),weight: FontWeight.w700,size: 22,family: "ProximaBold"),
-          ],
-        ),
+         title: Image.asset("assets/images/Homi-logo-white.png",width: 100,),
         elevation: 0,
         centerTitle: false,
+        automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-              padding: EdgeInsets.zero,
-              onPressed: (){
-
-              }, icon: Icon(Icons.search,color: themeAppColors(),)),
-          IconButton(
-              padding: EdgeInsets.zero,
-              onPressed: (){
-
-              }, icon: Icon(Icons.person,color: themeAppColors(),))
+          Container(
+            margin: rightPadding(5),
+            child: Icon(Icons.search,color: themeAppColors(),),
+          ),
+          responseUserData.isNotEmpty ?
+          Row(
+            children: [
+              Container(
+                margin: rightPadding(10),
+                child: Icon(Icons.notifications_outlined,color: themeAppColors(),),
+              ),
+              Container(
+                margin: rightPadding(20),
+                child: displayImage("${responseUserData[0].profilePicture}",width: 30,height: 30),
+              )
+            ],
+          ) :
+          Container(
+            margin: rightPadding(10),
+            child: Icon(Icons.person,color: themeAppColors(),),
+          ),
         ],
       ),
       body: Container(
-        padding: EdgeInsets.only(left: 0,right: 0,bottom: 10,top: 10),
+        padding: EdgeInsets.only(left: 20,right: 20,bottom: 10,top: 10),
         child:  Column(
           children: [
             Expanded(
-              child:  StaggeredGridView.countBuilder(
-                crossAxisCount: 4,
-                itemCount: listCategories.length,
-                primary: false,
-                shrinkWrap: true,
-                itemBuilder: (BuildContext context, int index) =>
-                    GestureDetector(
-                      onTap: (){
-                      },
-                      child: Container(
-                        child: Stack(
-                          children: [
-                            Container(
-                              child: Image.asset("assets/images/${listCategories[index].categoryName}.png",),
-                            ),
-                            Container(
-                              margin: topPadding(50),
-                              width: 180,
-                              child: Center(child: sText2("${listCategories[index].categoryName}",color: Colors.white,align: TextAlign.center,family: "ProximaBold",weight: FontWeight.w700,size: 14.46)),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                staggeredTileBuilder: (int index) =>
-                    StaggeredTile.fit(2),
-                mainAxisSpacing: 0.0,
-                crossAxisSpacing: 0.0,
-              ),
+              child:  GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 200,
+                      childAspectRatio: 3 / 2,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20),
+                  itemCount: listCategories.length,
+                  itemBuilder: (BuildContext ctx, index) {
+                    return Container(
+                      alignment: Alignment.center,
+                      child: Text(listCategories[index].categoryName),
+                      decoration: BoxDecoration(
+                          color: Colors.amber,
+                          borderRadius: BorderRadius.circular(15)),
+                    );
+                  }),
             ),
           ],
         ),

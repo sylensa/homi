@@ -76,21 +76,33 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: themeAppBarColors(),
 
-        title: Row(
-          children: [
-            displayImage("imagePath",width: 30,height: 30),
-            SizedBox(width: 10,),
-            sText("Home",color: themeAppColors(),weight: FontWeight.w700,size: 22,family: "ProximaBold"),
-          ],
+        title: Container(
+          child: Image.asset("assets/images/Homi-logo-white.png",width: 100,),
         ),
         elevation: 0,
         centerTitle: false,
         actions: [
-          Icon(Icons.search,color: themeAppColors(),),
           Container(
-              margin: rightPadding(15),
-              child: Icon(Icons.person,color: themeAppColors(),),
-          )
+              margin: rightPadding(5),
+            child: Icon(Icons.search,color: themeAppColors(),),
+          ),
+          responseUserData.isNotEmpty ?
+          Row(
+            children: [
+              Container(
+                margin: rightPadding(10),
+                child: Icon(Icons.notifications_outlined,color: themeAppColors(),),
+              ),
+              Container(
+                margin: rightPadding(15),
+                child: displayImage("${responseUserData[0].profilePicture}",width: 30,height: 30),
+              )
+            ],
+          ) :
+          Container(
+            margin: rightPadding(10),
+            child: Icon(Icons.person,color: themeAppColors(),),
+          ),
         ],
       ),
       body: Container(

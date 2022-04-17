@@ -304,12 +304,12 @@ class _MenuPageState extends State<MenuPage> {
   Widget signedInTitle(){
     return Row(
       children: [
-        displayImage("imagePath",width: 50,height: 50),
+        displayImage("${responseUserData[0].profilePicture}",width: 50,height: 50),
         SizedBox(width: 10,),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            sText("Welcome To Homi",color: themeAppColors(),weight: FontWeight.w700,size: 16,family: "ProximaBold"),
+            sText("${properCase(responseUserData[0].name)}",color: themeAppColors(),weight: FontWeight.w700,size: 16,family: "ProximaBold"),
             SizedBox(height: 5,),
             Container(
               padding: EdgeInsets.only(left: 15,right: 15,top: 5,bottom: 5),
@@ -340,12 +340,12 @@ class _MenuPageState extends State<MenuPage> {
       backgroundColor: themeAppBarColors(),
       appBar: AppBar(
         backgroundColor: themeAppBarColors(),
-        title: signedInTitle(),
+        title: responseUserData.isNotEmpty ? signedInTitle() : notSignedInTitle(),
         elevation: 0,
         centerTitle: false,
 
       ),
-      body: signedIn(),
+      body:responseUserData.isNotEmpty ? signedIn() : notSignedIn(),
 
     );
   }

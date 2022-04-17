@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:homi/controller/user_account_controller.dart';
 import 'package:homi/helper/hide.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:homi/services/get_user.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
@@ -20,6 +22,8 @@ String isoCountryCode = '';
 String countryCode = '';
 String mobileCountryCode = '';
 String mobileNetworkCode = '';
+var userAccountController = UserAccountController();
+List<ResponseData> responseUserData = [];
 
 List<BoxShadow> elevation({required Color color, required int elevation}) {
   return [
@@ -676,6 +680,8 @@ navigateTo(BuildContext context, Widget target, {bool replace = false, PageTrans
         )
     );
 }
+
+
 
 
 

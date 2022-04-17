@@ -5,6 +5,7 @@ import 'package:homi/helper/helper.dart';
 import 'package:homi/pages/index.dart';
 import 'package:flutter/material.dart';
 import 'package:homi/pages/introduction.dart';
+import 'package:homi/pages/launch_screen.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized(); //Ensure plugin services are initialized
@@ -33,7 +34,7 @@ class _MyAppState extends State<MyApp> {
       darkTheme:  isDarkModeEnabledLocal ? darkThemeData : lightThemeData,
       themeMode: EasyDynamicTheme.of(context).themeMode,
       onGenerateRoute: (settings){
-          return MaterialPageRoute(builder: (_) => IntroductionPage() ); // Pass it to BarPage.
+          return MaterialPageRoute(builder: (_) => LaunchScreen() ); // Pass it to BarPage.
       },
       // routes: {
       //   '/': (_) => IntroductionPage()

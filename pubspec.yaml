@@ -128,6 +128,7 @@ flutter:
     - assets/images/img4.png
     - assets/images/img5.png
     - assets/images/pabi at ledge.jpg
+    - assets/images/Homi-logo-white.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

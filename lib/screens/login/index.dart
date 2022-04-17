@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:homi/helper/helper.dart';
+import 'package:homi/helper/progress_dialog.dart';
+import 'package:homi/pages/index.dart';
 import 'package:homi/screens/signup/index.dart';
+import 'package:homi/services/get_user.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -17,6 +22,69 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+
+  login()async{
+    // try{
+      var js = await doPost('users/api/v2/auth/login', {
+        "email": emailController.text.trim(),
+        "password": passwordController.text.trim(),
+        "login_type":"normal",
+        "acesstype":"web",
+        "social_user_id":"",
+        "token":"",
+        "name":"","profile_picture":""
+      });
+
+      print("res createDummy: $js");
+
+      if(js["status"] == 'success'){
+        ResponseData responseData = ResponseData.fromJson(js["response"]);
+        ResponseData _responseData = ResponseData(
+            id: responseData.id,
+            name: responseData.name,
+            email: responseData.email,
+            phone: responseData.phone,
+            dob: responseData.dob,
+            age: responseData.age,
+            profilePicture: responseData.profilePicture,
+            loginType: responseData.loginType,
+            isLocked: responseData.isLocked,
+            notifyEmail: responseData.notifyEmail,
+            countryCode: responseData.countryCode,
+            iso: responseData.iso,
+            customerPaymentId: responseData.customerPaymentId,
+            subscriptionType: responseData.subscriptionType,
+            customerStripeId: responseData.customerStripeId,
+            isSubscribed: responseData.isSubscribed,
+            accessToken: responseData.accessToken,
+            subscribedPlan: responseData.subscribedPlan,
+            screen: responseData.screen,
+            screenImage: responseData.screenImage,
+            response: jsonEncode(js["response"])
+        );
+        await userAccountController.dropUserData();
+        await userAccountController.saveUserData(_responseData);
+        List<Map<String, dynamic>> timelineResponse = await userAccountController.fetchUserData();
+        print("response:${timelineResponse[0]["response"]}");
+        Map<String, dynamic> res = json.decode(timelineResponse[0]["response"]);
+        ResponseData dataData = ResponseData.fromJson(res);
+        responseUserData.add(dataData);
+        print("id:${responseData.id}");
+        Navigator.pop(context);
+        goTo(context, Index(initialIndex: 0,),replace: true);
+        toast("Account logged in successfully");
+      } else{
+        Navigator.pop(context);
+        showDialogOk(message: "${js["message"]}",context: context,status: false);
+      }
+    // }catch(e){
+    //   Navigator.pop(context);
+    //   print("error: $e");
+    //   showDialogOk(message: "$e",context: context,status: false);
+    // }
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,13 +96,13 @@ class _LoginPageState extends State<LoginPage> {
         }, icon: Icon(Icons.arrow_back_ios,color: themeAppColors(),)),
         title: sText("Sign In",weight: FontWeight.bold,size: 20),
         centerTitle: false,
+        elevation: 0,
       ),
 
       body: Container(
         padding: EdgeInsets.only(left: 10,right: 10,bottom: 20,top: 20),
         child: Column(
           children: [
-
             Expanded(
               child: ListView(
                 children: [
@@ -132,12 +200,22 @@ class _LoginPageState extends State<LoginPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
 
                           children: [
-                            Container(
-                              padding: EdgeInsets.only(left: 40,right: 40,top: 10,bottom: 10),
-                              child: sText2("Sign In",color: Colors.white,weight: FontWeight.bold),
-                              decoration: BoxDecoration(
-                                color: dPurple,
-                                borderRadius: BorderRadius.circular(30)
+                            GestureDetector(
+                              onTap: ()async{
+                                showDialog(
+                                    context: context,
+                                    useRootNavigator: false,
+                                    builder: (BuildContext context) => const ProgressDialog(message: "verifying code...",)
+                                );
+                                await  login();
+                              },
+                              child: Container(
+                                padding: EdgeInsets.only(left: 40,right: 40,top: 10,bottom: 10),
+                                child: sText2("Sign In",color: Colors.white,weight: FontWeight.bold),
+                                decoration: BoxDecoration(
+                                  color: dPurple,
+                                  borderRadius: BorderRadius.circular(30)
+                                ),
                               ),
                             ),
                           ],
