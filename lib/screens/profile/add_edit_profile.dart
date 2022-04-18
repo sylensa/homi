@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
 import 'package:homi/services/get_screens.dart';
@@ -13,7 +16,26 @@ class AddEdithProfile extends StatefulWidget {
 class _AddEdithProfileState extends State<AddEdithProfile> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController nameController = TextEditingController();
+  String profileImagePath = '';
+  String profileImageName = '';
+  attachDoc() async{
+    FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: false, type: FileType.image);
 
+    if(result != null) {
+      List<File> files = result.paths.map((path) => File(path!)).toList();
+
+      PlatformFile file = result.files.first;
+      print(file.name);
+      setState(() {
+          profileImagePath = file.path!;
+          profileImageName = file.name;
+          print("profileImagePath:$profileImagePath");
+          print("profileImageName:$profileImageName");
+      });
+    } else {
+      // User canceled the picker
+    }
+  }
   @override
   void initState() {
     // TODO: implement initState
@@ -43,8 +65,21 @@ class _AddEdithProfileState extends State<AddEdithProfile> {
                 child: sText("Add Profile"),
               ),
               SizedBox(height: 10,),
-              Container(
-                child: displayImage("${widget.responseScreens!.profileImage}",width: 70,height: 70),
+              GestureDetector(
+                onTap: (){
+                  attachDoc();
+                },
+                child: Container(
+                  child:  profileImagePath.isNotEmpty ?
+                  CircleAvatar(
+                    foregroundColor: Colors.grey,
+                    backgroundColor: Colors.white,
+                    radius: 40,
+                    backgroundImage:  FileImage(File(profileImagePath)),
+                    // child:  Image.file(File(profileImagePath),height: 80,width: 80,),
+                  ) :
+                  displayImage("${widget.responseScreens!.profileImage}",width: 70,height: 70),
+                ),
               ),
               Column(
                 children: [

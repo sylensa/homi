@@ -128,7 +128,8 @@ class _CategoryTypePageState extends State<CategoryTypePage> {
                       )
                 ],
               ),
-            ) : progressCode ?
+            )
+                : progressCode ?
             Expanded(
                 child: Center(
                   child: progress(),

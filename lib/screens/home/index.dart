@@ -121,7 +121,7 @@ class _HomePageState extends State<HomePage> {
                 CarouselSlider.builder(
                     options: CarouselOptions(
                       height: 225,
-                      autoPlay: true,
+                      autoPlay: false,
                       enableInfiniteScroll: true,
                       autoPlayAnimationDuration: Duration(seconds: 1),
                       enlargeCenterPage: true,

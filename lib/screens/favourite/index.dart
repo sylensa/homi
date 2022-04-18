@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:homi/helper/helper.dart';
 import 'package:homi/screens/movie/index.dart';
+import 'package:homi/services/get_favourite_videos.dart';
 
 class FavouriteMovies extends StatefulWidget {
   const FavouriteMovies({Key? key}) : super(key: key);
@@ -11,6 +12,40 @@ class FavouriteMovies extends StatefulWidget {
 }
 
 class _FavouriteMoviesState extends State<FavouriteMovies> {
+  bool progressCode = true;
+  List<FavouriteData> listFavouriteData = [];
+  getMyFavouriteVideos()async{
+    // try{
+   var js = await doGet('useractions/api/v2/favourite?page=1');
+    print("res timeline: $js");
+    if(!js["error"]){
+      for(int i = 0; i < js["response"]["data"].length; i++){
+        FavouriteData responseScreens = FavouriteData.fromJson(js["response"]["data"][i]);
+        listFavouriteData.add(responseScreens);
+      }
+      setState(() {
+
+      });
+    }
+    if(mounted){
+      setState(() {
+        progressCode = false;
+      });
+    }
+
+    // }catch(e){
+    //   print("error timeline: $e");
+    //   toast("$e, try again");
+    // }
+
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getMyFavouriteVideos();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,12 +64,13 @@ class _FavouriteMoviesState extends State<FavouriteMovies> {
 
         child:  Column(
           children: [
+            listFavouriteData.isNotEmpty ?
             Expanded(
               child: StaggeredGridView.countBuilder(
                 padding: appPadding(0),
                 // shrinkWrap: true,
                 crossAxisCount: 3,
-                itemCount:12,
+                itemCount:listFavouriteData.length,
                 itemBuilder: (BuildContext context, int index) =>
                     GestureDetector(
                       onTap: (){
@@ -49,7 +85,7 @@ class _FavouriteMoviesState extends State<FavouriteMovies> {
 
                                 child: Container(
                                   height: 150,
-                                  child: Image.asset("assets/images/pabi at ledge.jpg",width: 110,fit: BoxFit.fitHeight,),
+                                  child: displayImage("${listFavouriteData[index].thumbnailImage}",radius: 0,width: 100),
                                 ),
                               ),
                               Positioned(
@@ -74,7 +110,18 @@ class _FavouriteMoviesState extends State<FavouriteMovies> {
                 mainAxisSpacing: 10.0,
                 crossAxisSpacing: 10.0,
               ),
-            ),
+            )
+                : progressCode ?
+            Expanded(
+                child: Center(
+                  child: progress(),
+                ))
+                : Expanded(
+                child: Center(
+                  child: Container(
+                      child: sText("Sorry No videos are available",weight: FontWeight.bold)
+                  ),
+                )),
           ],
         ),
       ),

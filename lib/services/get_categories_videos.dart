@@ -84,9 +84,9 @@ class Main {
 
   factory Main.fromJson(Map<String, dynamic> json) => Main(
     videoList: VideoList.fromJson(json["video_list"]),
-    title: json["title"],
-    type: json["type"],
-    id: json["id"],
+    title: json["title"]?? "",
+    type: json["type"] ?? "",
+    id: json["id"] ?? "",
   );
 
   Map<String, dynamic> toJson() => {
@@ -199,24 +199,24 @@ class VideoData {
   String videoArea;
 
   factory VideoData.fromJson(Map<String, dynamic> json) => VideoData(
-      title: json["title"],
-      slug: json["slug"],
+      title: json["title"] ?? "",
+      slug: json["slug"] ?? "",
       thumbnailImage: json["thumbnail_image"],
       posterImage: json["poster_image"] ?? "",
-      isFavourite: json["is_favourite"],
-      isLive: json["is_live"],
-      viewCount: json["view_count"],
-      isPremium: json["is_premium"],
+      isFavourite: json["is_favourite"] ?? 0,
+      isLive: json["is_live"] ?? 0,
+      viewCount: json["view_count"] ?? 0,
+      isPremium: json["is_premium"] ?? 0,
       trailerHlsUrl: json["trailer_hls_url"] ?? "",
       trailerStatus: json["trailer_status"] ?? "",
       publishedOn: json["published_on"].toString() ,
       videoDuration: json["video_duration"] ?? "",
-      description: json["description"],
-      genreName: json["genre_name"],
-      videoCategoryName: json["video_category_name"],
-      isSubscribed: json["is_subscribed"],
+      description: json["description"] ?? "",
+      genreName: json["genre_name"] ?? "",
+      videoCategoryName: json["video_category_name"] ?? "",
+      isSubscribed: json["is_subscribed"] ?? 0,
       videoArea: json["video_area"] ?? "",
-    price: json["price"]
+    price: json["price"] ?? 0
   );
 
   Map<String, dynamic> toJson() => {
