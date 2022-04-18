@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
+import 'package:homi/services/get_screens.dart';
 
 class AddEdithProfile extends StatefulWidget {
-  const AddEdithProfile({Key? key}) : super(key: key);
+   ResponseScreens? responseScreens;
+   AddEdithProfile({this.responseScreens}) ;
 
   @override
   _AddEdithProfileState createState() => _AddEdithProfileState();
@@ -12,6 +14,12 @@ class _AddEdithProfileState extends State<AddEdithProfile> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController nameController = TextEditingController();
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    nameController.text = widget.responseScreens!.name;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,7 +44,7 @@ class _AddEdithProfileState extends State<AddEdithProfile> {
               ),
               SizedBox(height: 10,),
               Container(
-                child: displayImage("imagePath",width: 70,height: 70),
+                child: displayImage("${widget.responseScreens!.profileImage}",width: 70,height: 70),
               ),
               Column(
                 children: [

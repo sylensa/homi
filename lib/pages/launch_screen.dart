@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
 import 'package:homi/pages/index.dart';
 import 'package:homi/screens/login/index.dart';
+import 'package:homi/screens/profile/index.dart';
+import 'package:homi/services/get_homepage_banner.dart';
+import 'package:homi/services/get_screens.dart';
 import 'package:homi/services/get_user.dart';
 
 class LaunchScreen extends StatefulWidget {
@@ -15,18 +18,78 @@ class LaunchScreen extends StatefulWidget {
 class _LaunchScreenState extends State<LaunchScreen> {
 
   checkUserExist()async{
-    // await userAccountController.dropUserData();
-    List<Map<String, dynamic>> timelineResponse = await userAccountController.fetchUserData();
+    // await userAccountController.dropUserData("user_account");
+    // await userAccountController.dropUserData("user_screen");
+    List<Map<String, dynamic>> timelineResponse = await userAccountController.fetchUserData("user_account");
     print("response:${timelineResponse}");
     if(timelineResponse.isNotEmpty){
       Map<String, dynamic> res = json.decode(timelineResponse[0]["response"]);
       ResponseData dataData = ResponseData.fromJson(res);
       responseUserData.clear();
       responseUserData.add(dataData);
-      goTo(context, Index(initialIndex: 0,),replace: true);
+      userToken = responseUserData[0].accessToken;
+      await getScreens();
     }else{
-      goTo(context, LoginPage());
+      await getHomePageBanner();
+
     }
+  }
+  getScreens()async{
+    List<Map<String, dynamic>> timelineResponse = await userAccountController.fetchUserData("user_screen");
+    if(timelineResponse.isNotEmpty){
+      print("user_screen:${timelineResponse[0]["response"]}");
+      Map<String, dynamic> res = json.decode(timelineResponse[0]["response"]);
+      ResponseScreens dataData = ResponseScreens.fromJson(res);
+      responseScreenUser.clear();
+      responseScreenUser.add(dataData);
+      await getHomePageBanner();
+    }else{
+      goTo(context, ManageProfile(),replace: true);
+    }
+
+  }
+  getHomePageBanner()async{
+    // try{
+    var js = await doGet('medias/api/v2/home_page_banner');
+    print("res timeline: $js");
+    if(js["status"] == 'success'){
+      BannerResponse responseScreens = BannerResponse.fromJson(js["response"]["banner"]);
+      listBannerData.add(responseScreens);
+      BannerResponse _responseScreens = BannerResponse.fromJson(js["response"]["new"]);
+      listNewData.add(_responseScreens);
+      await getHomePageContent();
+    }else{
+      showDialogOk(message: "failed",context: context,status: false);
+    }
+
+
+    // }catch(e){
+    //   print("error timeline: $e");
+    //   toast("$e, try again");
+    // }
+
+  }
+  getHomePageContent()async{
+    // try{
+    var js = await doGet('medias/api/v2/home_page');
+    print("res timeline: $js");
+    if(js["status"] == 'success'){
+      for(int i = 0; i < js["response"]["home_content"].length; i++){
+        BannerResponse responseScreens = BannerResponse.fromJson(js["response"]["home_content"][i]);
+        listHomeContent.add(responseScreens);
+        goTo(context, Index(initialIndex: 0,),replace: true);
+      }
+
+    }else{
+      showDialogOk(message: "failed",context: context,status: false);
+    }
+
+
+    // }catch(e){
+    //   print("error timeline: $e");
+    //   toast("$e, try again");
+    // }
+
   }
   getSimInfo() async {
     try{
@@ -54,6 +117,7 @@ class _LaunchScreenState extends State<LaunchScreen> {
       });
     }catch(e){
       // print(e);
+      checkUserExist();
     }
 
   }

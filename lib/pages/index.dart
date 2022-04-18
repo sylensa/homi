@@ -13,7 +13,6 @@ import 'package:iconsax/iconsax.dart';
 
 class Index extends StatefulWidget {
   int initialIndex = 0;
-  int orderIndex = 0;
   Index({this.initialIndex = 0});
   @override
   _IndexState createState() => _IndexState();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
+import 'package:homi/pages/index.dart';
 import 'package:homi/screens/contact/index.dart';
 import 'package:homi/screens/favourite/index.dart';
 import 'package:homi/screens/history/index.dart';
@@ -105,7 +106,7 @@ class _MenuPageState extends State<MenuPage> {
               children: [
                 GestureDetector(
                   onTap: (){
-                    goTo(context, ManageProfile());
+                    goTo(context, ManageProfile(fromSettings: true,));
                   },
                   child: Container(
                     padding: leftPadding(10),
@@ -278,18 +279,31 @@ class _MenuPageState extends State<MenuPage> {
                   ),
                 ),
                 Divider(color: Colors.grey[200],),
-                Container(
-                  padding: leftPadding(10),
-                  child: Row(
-                    children: [
-                      IconButton(onPressed: (){
-
-                      }, icon: Icon(Icons.logout,color: themeAppColors(),)),
-                      SizedBox(width: 10,),
-                      Container(
-                        child: sText("Sign Out",weight: FontWeight.bold),
-                      )
-                    ],
+                GestureDetector(
+                  onTap: ()async{
+                    await userAccountController.dropUserData("user_account");
+                    await userAccountController.dropUserData("user_screen");
+                    responseUserData.clear();
+                    responseScreenUser.clear();
+                    goTo(context, Index(initialIndex: 0,),replace: true);
+                  },
+                  child: Container(
+                    padding: leftPadding(10),
+                    child: Row(
+                      children: [
+                        IconButton(onPressed: ()async{
+                          await userAccountController.dropUserData("user_account");
+                          await userAccountController.dropUserData("user_screen");
+                          responseUserData.clear();
+                          responseScreenUser.clear();
+                          goTo(context, Index(initialIndex: 0,),replace: true);
+                        }, icon: Icon(Icons.logout,color: themeAppColors(),)),
+                        SizedBox(width: 10,),
+                        Container(
+                          child: sText("Sign Out",weight: FontWeight.bold),
+                        )
+                      ],
+                    ),
                   ),
                 ),
                 Divider(color: Colors.grey[200],),
@@ -304,12 +318,12 @@ class _MenuPageState extends State<MenuPage> {
   Widget signedInTitle(){
     return Row(
       children: [
-        displayImage("${responseUserData[0].profilePicture}",width: 50,height: 50),
+        displayImage("${responseScreenUser[0].profileImage}",width: 50,height: 50),
         SizedBox(width: 10,),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            sText("${properCase(responseUserData[0].name)}",color: themeAppColors(),weight: FontWeight.w700,size: 16,family: "ProximaBold"),
+            sText("${properCase(responseScreenUser[0].name)}",color: themeAppColors(),weight: FontWeight.w700,size: 16,family: "ProximaBold"),
             SizedBox(height: 5,),
             Container(
               padding: EdgeInsets.only(left: 15,right: 15,top: 5,bottom: 5),
@@ -340,12 +354,12 @@ class _MenuPageState extends State<MenuPage> {
       backgroundColor: themeAppBarColors(),
       appBar: AppBar(
         backgroundColor: themeAppBarColors(),
-        title: responseUserData.isNotEmpty ? signedInTitle() : notSignedInTitle(),
+        title: responseScreenUser.isNotEmpty ? signedInTitle() : notSignedInTitle(),
         elevation: 0,
         centerTitle: false,
 
       ),
-      body:responseUserData.isNotEmpty ? signedIn() : notSignedIn(),
+      body:responseScreenUser.isNotEmpty ? signedIn() : notSignedIn(),
 
     );
   }

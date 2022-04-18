@@ -6,6 +6,10 @@ import 'package:homi/helper/hide.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:homi/services/get_categories.dart';
+import 'package:homi/services/get_categories_videos.dart';
+import 'package:homi/services/get_homepage_banner.dart';
+import 'package:homi/services/get_screens.dart';
 import 'package:homi/services/get_user.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -22,8 +26,15 @@ String isoCountryCode = '';
 String countryCode = '';
 String mobileCountryCode = '';
 String mobileNetworkCode = '';
+List<ResponseScreens> listResponseScreens = [];
+List<DataCategories> listDataCategories = [];
+List<ResponseScreens> responseScreenUser = [];
 var userAccountController = UserAccountController();
 List<ResponseData> responseUserData = [];
+List<BannerResponse> listBannerData = [];
+List<BannerResponse> listNewData = [];
+List<BannerResponse> listHomeContent = [];
+List<Main> listCategoryVideos = [];
 
 List<BoxShadow> elevation({required Color color, required int elevation}) {
   return [
@@ -647,7 +658,12 @@ doGet(String urlAfterBase) async {
   var url = Uri.parse('$base$urlAfterBase');
   print("url: $url");
   print("userToken: $userToken");
-  var js = await http.get(url,headers: {"authorization": "Bearer " + userToken});
+  var js;
+  if(userToken.isNotEmpty){
+    js =await http.get(url, headers: {"authorization": "Bearer " + userToken} );
+  }else{
+     js = await http.get(url );
+  }
   var decoded;
   try {
     decoded = jsonDecode(js.body);

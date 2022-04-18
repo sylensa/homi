@@ -56,9 +56,15 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    for (var i = 0; i < 2; i++) {
-      vcs.add(VideoController(source: VideoPlayerController.network("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"),autoplay: true,volume: 0,)
-        ..initialize());
+    for (var i = 0; i < listBannerData[0].data.length; i++) {
+      if(listBannerData[0].data[i].trailerHlsUrl.isNotEmpty){
+        vcs.add(VideoController(source: VideoPlayerController.network("${listBannerData[0].data[i].trailerHlsUrl}"),autoplay: true,volume: 0,)
+          ..initialize());
+      }else{
+        vcs.add(VideoController(source: VideoPlayerController.network("${listBannerData[0].data[i].trailerHlsUrl}"),autoplay: true,volume: 0,)
+          ..initialize());
+      }
+
     }
   }
   @override
@@ -86,7 +92,7 @@ class _HomePageState extends State<HomePage> {
               margin: rightPadding(5),
             child: Icon(Icons.search,color: themeAppColors(),),
           ),
-          responseUserData.isNotEmpty ?
+          responseScreenUser.isNotEmpty ?
           Row(
             children: [
               Container(
@@ -94,8 +100,8 @@ class _HomePageState extends State<HomePage> {
                 child: Icon(Icons.notifications_outlined,color: themeAppColors(),),
               ),
               Container(
-                margin: rightPadding(15),
-                child: displayImage("${responseUserData[0].profilePicture}",width: 30,height: 30),
+                margin: rightPadding(20),
+                child: displayImage("${responseScreenUser[0].profileImage}",width: 30,height: 30),
               )
             ],
           ) :
@@ -115,13 +121,14 @@ class _HomePageState extends State<HomePage> {
                 CarouselSlider.builder(
                     options: CarouselOptions(
                       height: 225,
-                      autoPlay: false,
-                      enableInfiniteScroll: false,
+                      autoPlay: true,
+                      enableInfiniteScroll: true,
                       autoPlayAnimationDuration: Duration(seconds: 1),
-                      enlargeCenterPage: false,
+                      enlargeCenterPage: true,
                       viewportFraction: 2.7,
                       aspectRatio: 2.0,
                       pageSnapping: true,
+
 
                       onPageChanged: (index, reason) {
                         setState(() {
@@ -140,40 +147,117 @@ class _HomePageState extends State<HomePage> {
 
                           background: Container(
                               width: appWidth(context),
-                              child: Image.network("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg",fit: BoxFit.fitWidth,)),
+                              child: Stack(
+                                children: [
+                                  displayImage(listBannerData[0].data[index].posterImage,radius: 0,height: 300,width: appWidth(context)),
+                                  Positioned(
+                                    bottom: 20,
+                                    left: 20,
+                                    child: Container(
+                                      child: Icon(Icons.play_arrow,color: Colors.white,),
+                                      decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.black26,
+                                          border: Border.all(color: Colors.white)
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: topPadding(150),
+                                    child: Center(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: map<Widget>(vcs.length, (index, url) {
+                                          return Container(
+                                            width: 25,
+                                            height: 3,
+                                            margin: EdgeInsets.only(right: 5),
+                                            decoration: BoxDecoration(color: _currentSlide == index ? Colors.white : dPurple),
+                                          );
+                                        }),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 20,
+                                    right: 20,
+                                    child: Container(
+                                      child: Icon(Icons.volume_mute,color: Colors.white,),
+                                    )
+                                  ),
+                                ],
+                              )
+                          ),
                           // cover: sText("${VideoController(source: VideoPlayerController.network(url),autoplay: true,initPosition: Duration(minutes: 9)).positionText}"),
                         ),
                       );
                     }),
-                SizedBox(height: 20,),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: map<Widget>(vcs.length, (index, url) {
-                      return Container(
-                        width: 25,
-                        height: 3,
-                        margin: EdgeInsets.only(right: 5),
-                        decoration: BoxDecoration(color: _currentSlide == index ? dPurple : sGray),
-                      );
-                    }),
-                  ),
-                ),
-                SizedBox(height: 10,),
+
+                // Column(
+                //   crossAxisAlignment: CrossAxisAlignment.start,
+                //   children: [
+                //     SizedBox(height: 10,),
+                //     Container(
+                //       margin: leftPadding(10),
+                //       child: sText("Continue Watching",weight: FontWeight.bold),
+                //     ),
+                //     SizedBox(height: 10,),
+                //     Container(
+                //       height: 150,
+                //       child: ListView.builder(
+                //           itemCount: 10,
+                //           shrinkWrap: true,
+                //           physics: ClampingScrollPhysics(),
+                //           scrollDirection: Axis.horizontal,
+                //           itemBuilder: (BuildContext context, int index){
+                //             return  GestureDetector(
+                //               onTap: (){
+                //                 goTo(context, MoviePage(url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",));
+                //               },
+                //               child: Row(
+                //                 children: [
+                //                   SizedBox(width: 10,),
+                //                   Stack(
+                //                     children: [
+                //                       ClipRRect(
+                //                         borderRadius: BorderRadius.circular(5.0),
+                //                         child: Container(
+                //                           height: 150,
+                //                           child: Image.asset("assets/images/pabi at ledge.jpg",width: 200,fit: BoxFit.fitHeight,),
+                //                         ),
+                //                       ),
+                //                       Positioned(
+                //                         bottom: 0,
+                //                         child: Container(
+                //                             width: 200,
+                //                             height: 5,
+                //                             decoration: BoxDecoration(
+                //                                 color: Colors.red,
+                //                             ),
+                //                         ),
+                //                       )
+                //                     ],
+                //                   ),
+                //                 ],
+                //               ),
+                //             );
+                //           }),
+                //     ),
+                //   ],
+                // ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: 10,),
                     Container(
                       margin: leftPadding(10),
-                      child: sText("Continue Watching",weight: FontWeight.bold),
+                      child: sText("${listNewData[0].categoryName}",weight: FontWeight.bold),
                     ),
                     SizedBox(height: 10,),
                     Container(
                       height: 150,
                       child: ListView.builder(
-                          itemCount: 10,
+                          itemCount: listNewData[0].data.length,
                           shrinkWrap: true,
                           physics: ClampingScrollPhysics(),
                           scrollDirection: Axis.horizontal,
@@ -191,17 +275,18 @@ class _HomePageState extends State<HomePage> {
                                         borderRadius: BorderRadius.circular(5.0),
                                         child: Container(
                                           height: 150,
-                                          child: Image.asset("assets/images/pabi at ledge.jpg",width: 200,fit: BoxFit.fitHeight,),
+                                          child: displayImage("${listNewData[0].data[index].thumbnailImage}",width: 100,radius: 0),
                                         ),
                                       ),
                                       Positioned(
-                                        bottom: 0,
+                                        right: 0,
                                         child: Container(
-                                            width: 200,
-                                            height: 5,
+                                            padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),
                                             decoration: BoxDecoration(
-                                                color: Colors.red,
+                                                color: Colors.black12,
+                                                borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
                                             ),
+                                            child: Icon(Icons.more_vert,color: dPurple,)
                                         ),
                                       )
                                     ],
@@ -213,60 +298,61 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-                for(int i =0; i < 11; i++)
+                for(int i =0; i < listHomeContent.length; i++)
+                  if(listHomeContent[i].data.isNotEmpty)
                  Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(height: 10,),
-        Container(
-          margin: leftPadding(10),
-          child: sText("Category Name",weight: FontWeight.bold),
-        ),
-        SizedBox(height: 10,),
-        Container(
-          height: 150,
-          child: ListView.builder(
-              itemCount: 10,
-              shrinkWrap: true,
-              physics: ClampingScrollPhysics(),
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (BuildContext context, int index){
-                return  GestureDetector(
-                  onTap: (){
-                    goTo(context, MoviePage(url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",));
-                  },
-                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(width: 10,),
-                      Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(5.0),
-                            child: Container(
-                              height: 150,
-                              child: Image.asset("assets/images/pabi at ledge.jpg",width: 100,fit: BoxFit.fitHeight,),
-                            ),
-                          ),
-                          Positioned(
-                            right: 0,
-                            child: Container(
-                                padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),
-                                decoration: BoxDecoration(
-                                  color: Colors.black12,
-                                  borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
-                                ),
-                                child: Icon(Icons.more_vert,color: dPurple,)
-                            ),
-                          )
-                        ],
+                      SizedBox(height: 10,),
+                      Container(
+                        margin: leftPadding(10),
+                        child: sText("${listHomeContent[i].categoryName}",weight: FontWeight.bold),
                       ),
+                      SizedBox(height: 10,),
+                      Container(
+                      height: 150,
+                      child: ListView.builder(
+                          itemCount: listHomeContent[i].data.length,
+                          shrinkWrap: true,
+                          physics: ClampingScrollPhysics(),
+                          scrollDirection: Axis.horizontal,
+                          itemBuilder: (BuildContext context, int index){
+                            return  GestureDetector(
+                              onTap: (){
+                                goTo(context, MoviePage(url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",));
+                              },
+                              child: Row(
+                                children: [
+                                  SizedBox(width: 10,),
+                                  Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(5.0),
+                                        child: Container(
+                                          height: 150,
+                                          child: displayImage("${listHomeContent[i].data[index].thumbnailImage}",width: 100,radius: 0),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        right: 0,
+                                        child: Container(
+                                            padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black12,
+                                              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
+                                            ),
+                                            child: Icon(Icons.more_vert,color: dPurple,)
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                    ),
                     ],
-                  ),
-                );
-              }),
-        ),
-      ],
-    )
+                  )
               ],
             ),
           )

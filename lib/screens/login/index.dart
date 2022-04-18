@@ -6,7 +6,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:homi/helper/helper.dart';
 import 'package:homi/helper/progress_dialog.dart';
 import 'package:homi/pages/index.dart';
+import 'package:homi/screens/profile/index.dart';
 import 'package:homi/screens/signup/index.dart';
+import 'package:homi/services/get_homepage_banner.dart';
 import 'package:homi/services/get_user.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -24,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController passwordController = TextEditingController();
 
   login()async{
-    // try{
+    try{
       var js = await doPost('users/api/v2/auth/login', {
         "email": emailController.text.trim(),
         "password": passwordController.text.trim(),
@@ -62,28 +64,30 @@ class _LoginPageState extends State<LoginPage> {
             screenImage: responseData.screenImage,
             response: jsonEncode(js["response"])
         );
-        await userAccountController.dropUserData();
+        await userAccountController.dropUserData("user_account");
         await userAccountController.saveUserData(_responseData);
-        List<Map<String, dynamic>> timelineResponse = await userAccountController.fetchUserData();
+        List<Map<String, dynamic>> timelineResponse = await userAccountController.fetchUserData("user_account");
         print("response:${timelineResponse[0]["response"]}");
         Map<String, dynamic> res = json.decode(timelineResponse[0]["response"]);
         ResponseData dataData = ResponseData.fromJson(res);
         responseUserData.add(dataData);
-        print("id:${responseData.id}");
+        userToken = responseUserData[0].accessToken;
+        print("id:${responseUserData[0].id}");
         Navigator.pop(context);
-        goTo(context, Index(initialIndex: 0,),replace: true);
+        goTo(context, ManageProfile(),replace: true);
         toast("Account logged in successfully");
       } else{
         Navigator.pop(context);
         showDialogOk(message: "${js["message"]}",context: context,status: false);
       }
-    // }catch(e){
-    //   Navigator.pop(context);
-    //   print("error: $e");
-    //   showDialogOk(message: "$e",context: context,status: false);
-    // }
+    }catch(e){
+      Navigator.pop(context);
+      print("error: $e");
+      showDialogOk(message: "$e",context: context,status: false);
+    }
 
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +209,7 @@ class _LoginPageState extends State<LoginPage> {
                                 showDialog(
                                     context: context,
                                     useRootNavigator: false,
-                                    builder: (BuildContext context) => const ProgressDialog(message: "verifying code...",)
+                                    builder: (BuildContext context) => const ProgressDialog(message: "Logging in...",)
                                 );
                                 await  login();
                               },
