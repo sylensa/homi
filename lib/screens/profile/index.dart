@@ -30,9 +30,6 @@ class _ManageProfileState extends State<ManageProfile> {
         ResponseScreens responseScreens = ResponseScreens.fromJson(js["response"]["screens"][i]);
         listResponseScreens.add(responseScreens);
       }
-    setState(() {
-
-    });
     }else{
       errorMessage = js["message"];
     }

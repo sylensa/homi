@@ -644,7 +644,12 @@ doPost(String urlAfterBase, Map body) async {
   print('body $body...');
   var url = Uri.parse('$base$urlAfterBase');
   var decoded;
-  var js = await http.post(url, body: replaceNulls(body),headers: {"authorization": "Bearer " + userToken});
+  var js;
+  if(userToken.isNotEmpty){
+     js = await http.post(url, body: replaceNulls(body),headers: {"authorization": "Bearer " + userToken});
+  }else{
+     js = await http.post(url, body: replaceNulls(body));
+  }
   print("body: ${js.body}");
   try{
     decoded = jsonDecode(js.body);

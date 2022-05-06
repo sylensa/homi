@@ -23,9 +23,6 @@ class _FavouriteMoviesState extends State<FavouriteMovies> {
         FavouriteData responseScreens = FavouriteData.fromJson(js["response"]["data"][i]);
         listFavouriteData.add(responseScreens);
       }
-      setState(() {
-
-      });
     }
     if(mounted){
       setState(() {
@@ -74,7 +71,7 @@ class _FavouriteMoviesState extends State<FavouriteMovies> {
                 itemBuilder: (BuildContext context, int index) =>
                     GestureDetector(
                       onTap: (){
-                        goTo(context, MoviePage(url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",));
+                        goTo(context, MoviePage());
                       },
                       child: Row(
                         children: [

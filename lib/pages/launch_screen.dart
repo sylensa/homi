@@ -58,8 +58,11 @@ class _LaunchScreenState extends State<LaunchScreen> {
       BannerResponse _responseScreens = BannerResponse.fromJson(js["response"]["new"]);
       listNewData.add(_responseScreens);
       await getHomePageContent();
+    }else if(js["message"] == "You have already logged in  with other device.  Please login again to continue."){
+      showDialogOk(message: js["message"] ,context: context,status: true,target: LoginPage(),replace: true);
     }else{
-      showDialogOk(message: "failed",context: context,status: false);
+      showDialogOk(message: js["message"] ,context: context,status: false,);
+
     }
 
 

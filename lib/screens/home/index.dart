@@ -264,7 +264,7 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (BuildContext context, int index){
                             return  GestureDetector(
                               onTap: (){
-                                goTo(context, MoviePage(url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",));
+                                goTo(context, MoviePage(bannerData: listNewData[0].data[index],));
                               },
                               child: Row(
                                 children: [
@@ -319,7 +319,7 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (BuildContext context, int index){
                             return  GestureDetector(
                               onTap: (){
-                                goTo(context, MoviePage(url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",));
+                                goTo(context, MoviePage(bannerData: listHomeContent[i].data[index],));
                               },
                               child: Row(
                                 children: [

@@ -38,7 +38,7 @@ class _WatchHistoryMoviesState extends State<WatchHistoryMovies> {
                 itemBuilder: (BuildContext context, int index) =>
                     GestureDetector(
                       onTap: (){
-                        goTo(context, MoviePage(url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",));
+                        goTo(context, MoviePage());
                       },
                       child: Row(
                         children: [
