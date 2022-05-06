@@ -6,6 +6,9 @@ import 'package:homi/helper/hide.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:homi/pages/create_playlist.dart';
+import 'package:homi/pages/list_playlist.dart';
+import 'package:homi/screens/profile/add_edit_profile.dart';
 import 'package:homi/services/get_categories.dart';
 import 'package:homi/services/get_categories_videos.dart';
 import 'package:homi/services/get_homepage_banner.dart';
@@ -772,4 +775,51 @@ themeAppColors(){
 
 themeAppBarColors(){
   return isDarkModeEnabledLocal ? darkColor : Colors.white;
+}
+
+popUpMenu({String movieId = "",BuildContext? context}){
+  return  PopupMenuButton(onSelected: (result) {
+    if(result == "playlist"){
+      goTo(context!, ListPlaylist(responseScreens: responseScreenUser[0],));
+    }
+  },
+    padding: bottomPadding(0),
+    child: Container(
+      child: Icon(Icons.more_vert,color: Colors.white),
+    ),
+    // add this line
+    itemBuilder: (_) => <PopupMenuItem<String>>[
+      PopupMenuItem<String>(
+        padding: EdgeInsets.only(left: 5,right: 5,bottom: 0),
+        height: 20,
+        child: Container(
+          // height: 30,
+          padding: EdgeInsets.only(bottom: 5),
+
+          child: sText("Add To Playlist",),
+          decoration: BoxDecoration(
+              border: Border(
+                  bottom: BorderSide(color: Colors.grey)
+              )
+          ),
+        )
+        , value: 'playlist',
+        onTap: (){
+
+        },
+      ),
+      PopupMenuItem<String>(
+        padding: EdgeInsets.only(left: 5,right: 5,top: 5),
+        height: 20,
+        child: Container(
+          // height: 30,
+            child: sText("Share",)
+        )
+        , value: 'share',
+        onTap: (){
+
+        },
+      ),
+    ],
+  );
 }

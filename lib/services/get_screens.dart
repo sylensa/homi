@@ -92,7 +92,7 @@ class ResponseScreens {
   factory ResponseScreens.fromJson(Map<String, dynamic> json) => ResponseScreens(
     id: json["_id"],
     name: json["name"],
-    profileImage: json["profile_image"],
+    profileImage: json["profile_image"] ?? "",
     isOccupied: json["is_occupied"],
     isDefault: json["is_default"],
     customerId: json["customer_id"],

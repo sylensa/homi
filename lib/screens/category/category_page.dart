@@ -92,7 +92,8 @@ class _CategoryTypePageState extends State<CategoryTypePage> {
                                 itemBuilder: (BuildContext context, int index){
                                   return  GestureDetector(
                                     onTap: (){
-                                      goTo(context, MoviePage());
+                                      goTo(context, MoviePage(slug: listCategoryVideos[i].videoList.data[index].slug,title: listCategoryVideos[i].videoList.data[index].title,));
+
                                     },
                                     child: Row(
                                       children: [
@@ -114,7 +115,7 @@ class _CategoryTypePageState extends State<CategoryTypePage> {
                                                       color: Colors.black12,
                                                       borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
                                                   ),
-                                                  child: Icon(Icons.more_vert,color: dPurple,)
+                                                  child: popUpMenu(movieId: listNewData[0].data[index].slug,context: context)
                                               ),
                                             )
                                           ],

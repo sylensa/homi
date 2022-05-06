@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
+import 'package:homi/pages/list_playlist.dart';
 import 'package:homi/services/get_homepage_banner.dart';
 import 'package:homi/services/get_movie_details.dart';
 import 'package:intl/intl.dart';
@@ -10,8 +11,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:video_box/video_box.dart';
 
 class MoviePage extends StatefulWidget {
-  BannerData? bannerData;
-   MoviePage({this.bannerData});
+  String slug;
+  String title;
+   MoviePage({this.slug = '',this.title = ''});
 
   @override
   _MoviePageState createState() => _MoviePageState();
@@ -20,6 +22,7 @@ class MoviePage extends StatefulWidget {
 class _MoviePageState extends State<MoviePage> {
   List<Widget> slides = [];
   List<Response> movie_details = [];
+  int secondsWatched = 0;
   bool isMore = false;
   List<T> map<T>(int listLength, Function handler) {
     List list = [];
@@ -41,7 +44,7 @@ class _MoviePageState extends State<MoviePage> {
 
   getMovieDetails()async{
     // try{
-    var js = await doPost('medias/api/v2/videos/${widget.bannerData!.slug}',{"screen":"${responseUserData.isNotEmpty ? responseUserData[0].id : ""}"});
+    var js = await doPost('medias/api/v2/videos/${widget.slug}',{"screen":"${responseUserData.isNotEmpty ? responseUserData[0].id : ""}"});
     print("res timeline: $js");
     if(js["status"] == 'success'){
       Response responseScreens = Response.fromJson(js["response"]);
@@ -49,8 +52,10 @@ class _MoviePageState extends State<MoviePage> {
       vcs = (VideoController(source: VideoPlayerController.network(movie_details[0].videoInfo!.hlsPlaylistUrl!),autoplay: true,)
         ..initialize())
         ..addListener(() {
-          // ignore: avoid_print
-          //   print("pSeconds value:${vcs!.value.position.inSeconds}");
+          if(vcs!.value.position.inSeconds == 30){
+            print("pSeconds value:${vcs!.value.position.inSeconds}");
+          }
+          secondsWatched = vcs!.value.position.inSeconds;
         });
       setState(() {
         print("len:${movie_details[0].videoInfo!.description!.length}");
@@ -84,8 +89,6 @@ class _MoviePageState extends State<MoviePage> {
     // TODO: implement initState
     super.initState();
     getMovieDetails();
-
-
   }
 
   @override
@@ -96,10 +99,11 @@ class _MoviePageState extends State<MoviePage> {
       appBar: AppBar(
         backgroundColor: themeAppBarColors(),
 
-        title:sText("${properCase(widget.bannerData!.title)}",color: themeAppColors(),weight: FontWeight.w700,family: "ProximaBold"),
+        title:sText("${properCase(widget.title)}",color: themeAppColors(),weight: FontWeight.w700,family: "ProximaBold"),
         elevation: 0,
         centerTitle: false,
         leading: IconButton(onPressed: (){
+          print("secondsWatched:$secondsWatched");
           Navigator.pop(context);
         }, icon: Icon(Icons.arrow_back_ios,color: themeAppColors(),)),
         actions: [
@@ -244,6 +248,7 @@ class _MoviePageState extends State<MoviePage> {
                           ),
                         ),
                         SizedBox(width: 10,),
+                        movie_details[0].videoInfo!.price! == 0 ?
                         Container(
                           padding: EdgeInsets.only(left: 5,right: 10,top: 5,bottom: 5),
                           decoration: BoxDecoration(
@@ -253,10 +258,19 @@ class _MoviePageState extends State<MoviePage> {
                           child: Row(
                             children: [
                               Icon(Icons.play_arrow,color: Colors.white,),
-                              sText2("Play",color: Colors.white,weight: FontWeight.bold)
+                              sText2("Play movie",color: Colors.white,weight: FontWeight.bold)
                             ],
                           ),
-                        ),
+                        ) :
+                            Container(
+                              child: sText("RENT \$${movie_details[0].videoInfo!.price}"),
+                              padding: appPadding(5),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: dPurple),
+                                borderRadius: BorderRadius.circular(5)
+                              ),
+                            )
+                        ,
                       ],
                     ),
                   ),
@@ -295,7 +309,7 @@ class _MoviePageState extends State<MoviePage> {
                       children: [
                         sText("Starring",color: Colors.white,weight: FontWeight.bold),
                         SizedBox(height: 5,),
-                        sText2("Starring",color: Colors.grey,weight: FontWeight.bold),
+                        sText2("${movie_details[0].videoInfo!.presenter}",color: Colors.grey,weight: FontWeight.bold),
 
                       ],
                     ),
@@ -357,12 +371,17 @@ class _MoviePageState extends State<MoviePage> {
                             ),
                           ),
                         ),
-                        Container(
-                          child: Column(
-                            children: [
-                              Icon(Icons.playlist_add,color: Colors.grey,),
-                              sText2("Playlist",color: Colors.grey)
-                            ],
+                        GestureDetector(
+                          onTap: (){
+                            goTo(context, ListPlaylist(responseScreens: responseScreenUser[0],));
+                          },
+                          child: Container(
+                            child: Column(
+                              children: [
+                                Icon(Icons.playlist_add,color: Colors.grey,),
+                                sText2("Playlist",color: Colors.grey)
+                              ],
+                            ),
                           ),
                         ),
                         Container(
@@ -410,6 +429,8 @@ class _MoviePageState extends State<MoviePage> {
                               itemBuilder: (BuildContext context, int index){
                                 return  GestureDetector(
                                   onTap: (){
+                                    goTo(context, MoviePage(slug: movie_details[0].related!.data![index].slug!,title: movie_details[0].related!.data![index].title!,));
+
                                   },
                                   child: Row(
                                     children: [
@@ -431,7 +452,7 @@ class _MoviePageState extends State<MoviePage> {
                                                     color: Colors.black26,
                                                     borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
                                                 ),
-                                                child: Icon(Icons.more_vert,color: dPurple,)
+                                                child: popUpMenu(movieId: movie_details[0].related!.data![index].slug!,context: context)
                                             ),
                                           )
                                         ],

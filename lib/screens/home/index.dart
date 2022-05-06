@@ -52,6 +52,7 @@ class _HomePageState extends State<HomePage> {
   }
 
 
+
   @override
   void initState() {
     // TODO: implement initState
@@ -128,13 +129,12 @@ class _HomePageState extends State<HomePage> {
                       viewportFraction: 2.7,
                       aspectRatio: 2.0,
                       pageSnapping: true,
-
-
                       onPageChanged: (index, reason) {
                         setState(() {
                           _currentSlide = index;
                         });
                       },
+
                     ),
                     itemCount: vcs.length,
                     itemBuilder: (BuildContext context, int index, int index2) {
@@ -144,49 +144,54 @@ class _HomePageState extends State<HomePage> {
                         child: VideoBox(
                           customLoadingWidget: Container(),
                           controller:vcs[index],
-
-                          background: Container(
-                              width: appWidth(context),
-                              child: Stack(
-                                children: [
-                                  displayImage(listBannerData[0].data[index].posterImage,radius: 0,height: 300,width: appWidth(context)),
-                                  Positioned(
-                                    bottom: 20,
-                                    left: 20,
-                                    child: Container(
-                                      child: Icon(Icons.play_arrow,color: Colors.white,),
-                                      decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.black26,
-                                          border: Border.all(color: Colors.white)
+                          background: GestureDetector(
+                            onTap: (){
+                              print("hello");
+                              goTo(context, MoviePage(slug: listBannerData[0].data[index].slug,title: listBannerData[0].data[index].title,));
+                            },
+                            child: Container(
+                                width: appWidth(context),
+                                child: Stack(
+                                  children: [
+                                    displayImage(listBannerData[0].data[index].posterImage,radius: 0,height: 300,width: appWidth(context)),
+                                    Positioned(
+                                      bottom: 20,
+                                      left: 20,
+                                      child: Container(
+                                        child: Icon(Icons.play_arrow,color: Colors.white,),
+                                        decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.black26,
+                                            border: Border.all(color: Colors.white)
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Container(
-                                    margin: topPadding(150),
-                                    child: Center(
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: map<Widget>(vcs.length, (index, url) {
-                                          return Container(
-                                            width: 25,
-                                            height: 3,
-                                            margin: EdgeInsets.only(right: 5),
-                                            decoration: BoxDecoration(color: _currentSlide == index ? Colors.white : dPurple),
-                                          );
-                                        }),
+                                    Container(
+                                      margin: topPadding(150),
+                                      child: Center(
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: map<Widget>(vcs.length, (index, url) {
+                                            return Container(
+                                              width: 25,
+                                              height: 3,
+                                              margin: EdgeInsets.only(right: 5),
+                                              decoration: BoxDecoration(color: _currentSlide == index ? Colors.white : dPurple),
+                                            );
+                                          }),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Positioned(
-                                    bottom: 20,
-                                    right: 20,
-                                    child: Container(
-                                      child: Icon(Icons.volume_mute,color: Colors.white,),
-                                    )
-                                  ),
-                                ],
-                              )
+                                    Positioned(
+                                      bottom: 20,
+                                      right: 20,
+                                      child: Container(
+                                        child: Icon(Icons.volume_mute,color: Colors.white,),
+                                      )
+                                    ),
+                                  ],
+                                )
+                            ),
                           ),
                           // cover: sText("${VideoController(source: VideoPlayerController.network(url),autoplay: true,initPosition: Duration(minutes: 9)).positionText}"),
                         ),
@@ -264,7 +269,7 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (BuildContext context, int index){
                             return  GestureDetector(
                               onTap: (){
-                                goTo(context, MoviePage(bannerData: listNewData[0].data[index],));
+                                goTo(context, MoviePage(slug: listNewData[0].data[index].slug,title: listNewData[0].data[index].title,));
                               },
                               child: Row(
                                 children: [
@@ -286,7 +291,7 @@ class _HomePageState extends State<HomePage> {
                                                 color: Colors.black12,
                                                 borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
                                             ),
-                                            child: Icon(Icons.more_vert,color: dPurple,)
+                                            child: popUpMenu(movieId: listNewData[0].data[index].slug,context: context)
                                         ),
                                       )
                                     ],
@@ -319,7 +324,7 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (BuildContext context, int index){
                             return  GestureDetector(
                               onTap: (){
-                                goTo(context, MoviePage(bannerData: listHomeContent[i].data[index],));
+                                goTo(context, MoviePage(slug: listHomeContent[0].data[index].slug,title: listHomeContent[0].data[index].title,));
                               },
                               child: Row(
                                 children: [
@@ -341,7 +346,7 @@ class _HomePageState extends State<HomePage> {
                                               color: Colors.black12,
                                               borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
                                             ),
-                                            child: Icon(Icons.more_vert,color: dPurple,)
+                                            child: popUpMenu(movieId: listHomeContent[0].data[index].slug,context: context)
                                         ),
                                       )
                                     ],
