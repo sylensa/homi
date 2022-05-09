@@ -147,6 +147,7 @@ class _MoviePageState extends State<MoviePage> {
         await Dio().download(url, saveFile.path,
 
             onReceiveProgress: (value1, value2) {
+          if(mounted)
               setState(() {
                 progres = value1 / value2;
               });

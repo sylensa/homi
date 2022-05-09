@@ -16,7 +16,7 @@ class _FavouriteMoviesState extends State<FavouriteMovies> {
   List<FavouriteData> listFavouriteData = [];
   getMyFavouriteVideos()async{
     // try{
-   var js = await doGet('useractions/api/v2/favourite?page=1');
+   var js = await doGet('useractions/api/v2/favourite');
     print("res timeline: $js");
     if(!js["error"]){
       for(int i = 0; i < js["response"]["data"].length; i++){
