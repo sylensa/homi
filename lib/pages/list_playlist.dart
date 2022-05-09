@@ -4,11 +4,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
 import 'package:homi/pages/create_playlist.dart';
+import 'package:homi/services/get_playlist.dart';
 import 'package:homi/services/get_screens.dart';
 
 class ListPlaylist extends StatefulWidget {
   ResponseScreens? responseScreens;
-  ListPlaylist({this.responseScreens}) ;
+  String slug;
+  ListPlaylist({this.responseScreens,this.slug = ''}) ;
 
   @override
   _ListPlaylisttState createState() => _ListPlaylisttState();
@@ -19,6 +21,8 @@ class _ListPlaylisttState extends State<ListPlaylist> {
   TextEditingController nameController = TextEditingController();
   String profileImagePath = '';
   String profileImageName = '';
+  bool progressCode = true;
+  List<Datum> data = [];
   attachDoc() async{
     FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: false, type: FileType.image);
 
@@ -38,10 +42,48 @@ class _ListPlaylisttState extends State<ListPlaylist> {
     }
   }
 
+  getPlaylist()async{
+    // try{
+    var js = await doGet('useractions/api/v2/create_playlist?video_id=queen-of-the-sun&page=1');
+    print("res timeline: $js");
+    if(js["status"] == 'success'){
+      MyPlaylist responsePlaylist = MyPlaylist.fromJson(js["response"]["my_playlist"]);
+      myPlaylist.add(responsePlaylist);
+    }else{
+      toast(js["message"]);
+    }
+    setState(() {
+      progressCode = false;
+    });
+
+    // }catch(e){
+    //   print("error timeline: $e");
+    //   toast("$e, try again");
+    // }
+
+  }
+
+  addMovieToPlaylist()async{
+    // try{
+    var js = await doPost('useractions/api/v2/create_playlist',{"name":data[0].name,"videos":widget.slug,"id":data[0].id,"screen":responseUserData.isNotEmpty ? widget.responseScreens!.id : ""});
+    print("res timeline: $js");
+    if(js["status"] == 'success'){
+      toast(js["message"]);
+    }else{
+      toast(js["message"]);
+    }
+    // }catch(e){
+    //   print("error timeline: $e");
+    //   toast("$e, try again");
+    // }
+
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    getPlaylist();
   }
   @override
   Widget build(BuildContext context) {
@@ -76,6 +118,10 @@ class _ListPlaylisttState extends State<ListPlaylist> {
                           GestureDetector(
                             onTap: (){
                               Navigator.pop(context);
+                              if(data.isNotEmpty){
+                                addMovieToPlaylist();
+                              }
+
                             },
                             child: Container(
                               margin: bottomPadding(5),
@@ -88,7 +134,9 @@ class _ListPlaylisttState extends State<ListPlaylist> {
                     GestureDetector(
                       onTap: (){
                         Navigator.pop(context);
-                        goTo(context, CreatePlaylist(responseScreens: responseScreenUser[0],));
+
+                        goTo(context, CreatePlaylist(responseScreens: responseScreenUser[0],slug: widget.slug,));
+
                       },
                       child: Container(
                         child: sText("Create New Playlist",weight: FontWeight.bold,size: 16,align: TextAlign.center),
@@ -124,26 +172,43 @@ class _ListPlaylisttState extends State<ListPlaylist> {
                         ],
                       ),
                     ),
-
-                    for(int i = 0; i < 10; i++)
-                      Container(
-                        child: Row(
+                    SizedBox(height: 10,),
+                    myPlaylist.isNotEmpty ?
+                        Column(
                           children: [
-                            Checkbox(
-                              value: true,
-                              onChanged: (value){
-                                print(value);
-                              },
-                              activeColor: dPurple,
+                            for(int i = 0; i < myPlaylist[0].data.length; i++)
+                              GestureDetector(
+                                onTap: (){
+                                  setState(() {
+                                    if(data.contains(myPlaylist[0].data[i])){
+                                      data.clear();
+                                    }else{
+                                      data.clear();
+                                      data.add(myPlaylist[0].data[i]);
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  child: Row(
+                                    children: [
+                                      Checkbox(
+                                        value: data.contains(myPlaylist[0].data[i]) ? true : false,
+                                        onChanged: (value){
+                                          print(value);
+                                        },
+                                        activeColor: dPurple,
 
-                            ),
-                            Container(
-                              child: sText("Sylensa Playlist"),
-                            )
+                                      ),
+                                      Container(
+                                        child: sText("${myPlaylist[0].data[i].name}"),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
                           ],
-                        ),
-                      )
-
+                        ) :
+                    Center(child: progress(),)
                   ],
                 ),
               ),

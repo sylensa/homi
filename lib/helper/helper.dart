@@ -12,15 +12,16 @@ import 'package:homi/screens/profile/add_edit_profile.dart';
 import 'package:homi/services/get_categories.dart';
 import 'package:homi/services/get_categories_videos.dart';
 import 'package:homi/services/get_homepage_banner.dart';
+import 'package:homi/services/get_playlist.dart';
 import 'package:homi/services/get_screens.dart';
 import 'package:homi/services/get_user.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:recase/recase.dart';
+import 'package:share/share.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-String userToken = '';
 bool isDarkModeEnabledLocal = true;
 bool viewedSlider = false;
 String allowsVOIP = '';
@@ -38,7 +39,7 @@ List<BannerResponse> listBannerData = [];
 List<BannerResponse> listNewData = [];
 List<BannerResponse> listHomeContent = [];
 List<Main> listCategoryVideos = [];
-
+List<MyPlaylist> myPlaylist = [];
 List<BoxShadow> elevation({required Color color, required int elevation}) {
   return [
     BoxShadow(color: color.withOpacity(0.6), offset: Offset(0.0, 4.0), blurRadius: 3.0 * elevation, spreadRadius: -1.0 * elevation),
@@ -641,6 +642,19 @@ Map stripNulls(dynamic v) {
   }
   return finalMap;
 }
+doDelete(String urlAfterBase) async {
+  var url = Uri.parse('$base$urlAfterBase');
+  print("url: $url");
+  var js = await http.delete(url,headers: {"authorization": "Bearer " + userToken});
+  var decoded;
+  try {
+    decoded = jsonDecode(js.body);
+  } catch(e) {
+    print("decoded: ${js.body}");
+    print(e);
+  }
+  return decoded;
+}
 
 doPost(String urlAfterBase, Map body) async {
   print('Calling $base$urlAfterBase...');
@@ -649,7 +663,7 @@ doPost(String urlAfterBase, Map body) async {
   var decoded;
   var js;
   if(userToken.isNotEmpty){
-     js = await http.post(url, body: replaceNulls(body),headers: {"authorization": "Bearer " + userToken});
+     js = await http.post(url, body: replaceNulls(body),headers: headers);
   }else{
      js = await http.post(url, body: replaceNulls(body));
   }
@@ -668,15 +682,16 @@ doGet(String urlAfterBase) async {
   print("userToken: $userToken");
   var js;
   if(userToken.isNotEmpty){
-    js =await http.get(url, headers: {"authorization": "Bearer " + userToken} );
+    js =await http.get(url, headers: headers );
   }else{
      js = await http.get(url );
   }
   var decoded;
+  print("decoded: ${js.body}");
   try {
     decoded = jsonDecode(js.body);
   } catch(e) {
-    print("decoded: ${js.body}");
+
     print(e);
   }
   return decoded;
@@ -709,66 +724,6 @@ navigateTo(BuildContext context, Widget target, {bool replace = false, PageTrans
 
 
 
-
-
-addToCartModalBottomSheet(context, String productName){
-  showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context){
-        return StatefulBuilder(
-          builder: (BuildContext context,StateSetter stateSetter){
-            return Container(
-                height: appHeight(context) * 0.30,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ListView(
-                        children: [
-                          SizedBox(height: 20,),
-                          Center(
-                            child: Container(
-                              margin: EdgeInsets.only(left: 20,right: 20,),
-
-                              child: sText("${productName} has been successfully added to cart!",color: Colors.black,weight: FontWeight.bold,align: TextAlign.center),
-                            ),
-                          ),
-                          Container(
-                            margin: appPadding(20),
-                            width: appWidth(context),
-                            child: dPurpleGradientButton(
-                                content: sText("VIEW CART",color: Colors.white,weight: FontWeight.bold),
-                                onPressed: (){
-
-                                }
-                            ),
-                          ),
-                          Container(
-                            margin: EdgeInsets.only(left: 20,right: 20,),
-                            width: appWidth(context),
-                            height: 50,
-                            child: solonOutlineButton(
-                                outlineColor: dPurple,
-                                content: sText("CONTINUE SHOPPING",color: dPurple,weight: FontWeight.bold)
-                                ,
-                                onPressed: (){
-                                    Navigator.pop(context);
-                                }
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-            );
-          },
-
-        );
-      }
-  );
-}
-
 themeAppColors(){
   return isDarkModeEnabledLocal ?  Colors.white  : darkColor;
 }
@@ -780,7 +735,7 @@ themeAppBarColors(){
 popUpMenu({String movieId = "",BuildContext? context}){
   return  PopupMenuButton(onSelected: (result) {
     if(result == "playlist"){
-      goTo(context!, ListPlaylist(responseScreens: responseScreenUser[0],));
+      goTo(context!, ListPlaylist(responseScreens: responseScreenUser[0],slug: movieId,));
     }
   },
     padding: bottomPadding(0),
@@ -790,18 +745,9 @@ popUpMenu({String movieId = "",BuildContext? context}){
     // add this line
     itemBuilder: (_) => <PopupMenuItem<String>>[
       PopupMenuItem<String>(
-        padding: EdgeInsets.only(left: 5,right: 5,bottom: 0),
-        height: 20,
         child: Container(
           // height: 30,
-          padding: EdgeInsets.only(bottom: 5),
-
-          child: sText("Add To Playlist",),
-          decoration: BoxDecoration(
-              border: Border(
-                  bottom: BorderSide(color: Colors.grey)
-              )
-          ),
+          child: sText("Add To Playlist",size: 18),
         )
         , value: 'playlist',
         onTap: (){
@@ -809,17 +755,153 @@ popUpMenu({String movieId = "",BuildContext? context}){
         },
       ),
       PopupMenuItem<String>(
-        padding: EdgeInsets.only(left: 5,right: 5,top: 5),
-        height: 20,
         child: Container(
           // height: 30,
-            child: sText("Share",)
+            child: sText("Share",size: 18)
         )
         , value: 'share',
         onTap: (){
-
+          _onShareData(context!);
         },
       ),
     ],
   );
+}
+_onShareData(BuildContext context) async {
+
+  await Share.share("ds", subject: "Homi",);
+}
+addMovieToFavourite({String slug = '',})async{
+  // try{
+  var js = await doPost('useractions/api/v2/favourite',{"video_slug":slug,"screen": responseScreenUser.isNotEmpty ? responseScreenUser[0].id : ""});
+  print("res timeline: $js");
+  if(js["status"] == 'success'){
+    toast(js["message"]);
+  }else{
+    toast(js["message"]);
+  }
+  // }catch(e){
+  //   print("error timeline: $e");
+  //   toast("$e, try again");
+  // }
+
+}
+removeMovieFromFavourite({String slug = '',})async{
+  // try{
+  var js = await doDelete("useractions/api/v2/favourite?video_slug=$slug");
+  print("res timeline: $js");
+  if(js["status"] == 'success'){
+    toast(js["message"]);
+  }else{
+    toast(js["message"]);
+  }
+  // }catch(e){
+  //   print("error timeline: $e");
+  //   toast("$e, try again");
+  // }
+
+}
+
+likeMovie({String slug = '',})async{
+  // try{
+  var js = await doPost('useractions/api/v2/like',{"video_id":slug,"status": 1});
+  print("res timeline: $js");
+  if(js["status"] == 'success'){
+    toast(js["message"]);
+  }else{
+    toast(js["message"]);
+  }
+  // }catch(e){
+  //   print("error timeline: $e");
+  //   toast("$e, try again");
+  // }
+
+}
+
+disLikeMovie({String slug = '',})async{
+  // try{
+  var js = await doPost('useractions/api/v2/dislike',{"video_id":slug,"status": 1});
+  print("res timeline: $js");
+  if(js["status"] == 'success'){
+    toast(js["message"]);
+  }else{
+    toast(js["message"]);
+  }
+  // }catch(e){
+  //   print("error timeline: $e");
+  //   toast("$e, try again");
+  // }
+
+}
+
+extension StringExtension on String {
+  static String displayTimeAgoFromTimestamp(String timestamp) {
+    final year = int.parse(timestamp.substring(0, 4));
+    final month = int.parse(timestamp.substring(5, 7));
+    final day = int.parse(timestamp.substring(8, 10));
+    final hour = int.parse(timestamp.substring(11, 13));
+    final minute = int.parse(timestamp.substring(14, 16));
+
+    final DateTime videoDate = DateTime(year, month, day, hour, minute);
+    int diffInHours = DateTime.now().difference(videoDate).inHours;
+
+    String timeAgo = '';
+    String timeUnit = '';
+    int timeValue = 0;
+    if(diffInHours < 0){
+      diffInHours = diffInHours * -1;
+      if (diffInHours < 1) {
+        final diffInMinutes = DateTime.now().difference(videoDate).inMinutes;
+        timeValue = diffInMinutes;
+        timeUnit = 'm';
+      } else if (diffInHours < 24) {
+        timeValue = diffInHours;
+        timeUnit = 'h';
+      } else if (diffInHours >= 24 && diffInHours < 24 * 7) {
+        timeValue = (diffInHours / 24).floor();
+        timeUnit = 'd';
+      } else if (diffInHours >= 24 * 7 && diffInHours < 24 * 30) {
+        timeValue = (diffInHours / (24 * 7)).floor();
+        timeUnit = 'w';
+      } else if (diffInHours >= 24 * 30 && diffInHours < 24 * 12 * 30) {
+        timeValue = (diffInHours / (24 * 30)).floor();
+        timeUnit = 'm';
+      } else {
+        timeValue = (diffInHours / (24 * 365)).floor();
+        timeUnit = 'y';
+      }
+      timeAgo = timeValue.toString() + ' ' + timeUnit;
+      timeAgo += timeValue > 1 ? '' : '';
+
+      return 'in ' + timeAgo;
+    }else{
+      if (diffInHours < 1) {
+        final diffInMinutes = DateTime.now().difference(videoDate).inMinutes;
+        timeValue = diffInMinutes;
+        timeUnit = 'm';
+      } else if (diffInHours < 24) {
+        timeValue = diffInHours;
+        timeUnit = 'h';
+      } else if (diffInHours >= 24 && diffInHours < 24 * 7) {
+        timeValue = (diffInHours / 24).floor();
+        timeUnit = 'd';
+      } else if (diffInHours >= 24 * 7 && diffInHours < 24 * 30) {
+        timeValue = (diffInHours / (24 * 7)).floor();
+        timeUnit = 'wk';
+      } else if (diffInHours >= 24 * 30 && diffInHours < 24 * 12 * 30) {
+        timeValue = (diffInHours / (24 * 30)).floor();
+        timeUnit = 'mt';
+      } else {
+        timeValue = (diffInHours / (24 * 365)).floor();
+        timeUnit = 'yr';
+      }
+      timeAgo = timeValue.toString() + timeUnit;
+      timeAgo += timeValue > 1 ? '' : '';
+
+      return timeAgo;
+    }
+
+
+
+  }
 }

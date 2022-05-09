@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
+import 'package:homi/pages/list_playlist.dart';
 import 'package:homi/services/get_screens.dart';
 
 class CreatePlaylist extends StatefulWidget {
   ResponseScreens? responseScreens;
-  CreatePlaylist({this.responseScreens}) ;
+  String slug;
+  CreatePlaylist({this.responseScreens,this.slug = ''}) ;
 
   @override
   _CreatePlaylistState createState() => _CreatePlaylistState();
@@ -36,10 +38,44 @@ class _CreatePlaylistState extends State<CreatePlaylist> {
       // User canceled the picker
     }
   }
+  bool progressCode = false;
+  createPlaylist({String name = ''})async{
+    // try{
+    var js = await doPost('useractions/api/v2/create_playlist',{"screen": responseUserData.isNotEmpty ? widget.responseScreens!.id : "","name":name,});
+    print("res timeline: $js");
+    if(js["status"] == "success"){
+      Navigator.pop(context);
+      goTo(context, ListPlaylist(responseScreens: widget.responseScreens,slug: widget.slug,));
+      setState(() {
+        progressCode = false;
+        toast(js["message"]);
+      });
+    }
+    else if(js["message"] == "Playlist already exists"){
+      Navigator.pop(context);
+      goTo(context, ListPlaylist(responseScreens: widget.responseScreens,slug: widget.slug,));
+      setState(() {
+        progressCode = false;
+        toast(js["message"]);
+      });
+    } else{
+      setState(() {
+        progressCode = false;
+        toast(js["message"]);
+      });
+    }
+
+    // }catch(e){
+    //   print("error timeline: $e");
+    //   toast("$e, try again");
+    // }
+
+  }
 
   @override
   void initState() {
     // TODO: implement initState
+    print(progressCode);
     super.initState();
   }
   @override
@@ -107,15 +143,29 @@ class _CreatePlaylistState extends State<CreatePlaylist> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Container(
-                      padding: EdgeInsets.only(top: 10,bottom: 10),
-                      width: 150,
-                      child: sText2("Save",color: Colors.white,align: TextAlign.center),
-                      decoration: BoxDecoration(
-                          color: dPurple,
-                          borderRadius: BorderRadius.circular(5)
+                    !progressCode ?
+                    GestureDetector(
+                      onTap: (){
+                        if(nameController.text.isNotEmpty){
+                          setState(() {
+                            progressCode = true;
+                          });
+                          createPlaylist(name: nameController.text);
+                        }else{
+                          toast("Field is empty");
+                        }
+
+                      },
+                      child: Container(
+                        padding: EdgeInsets.only(top: 10,bottom: 10),
+                        width: 150,
+                        child: sText2("Save",color: Colors.white,align: TextAlign.center),
+                        decoration: BoxDecoration(
+                            color: dPurple,
+                            borderRadius: BorderRadius.circular(5)
+                        ),
                       ),
-                    ),
+                    ) : progress(),
                     GestureDetector(
                       onTap: (){
                         Navigator.pop(context);

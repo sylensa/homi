@@ -22,14 +22,14 @@ class GetMovieDetails {
   int statusCode;
   String? status;
   String? message;
-  Response? response;
+  Responses? response;
 
   factory GetMovieDetails.fromJson(Map<String, dynamic> json) => GetMovieDetails(
     error: json["error"] == null ? null : json["error"],
     statusCode: json["statusCode"] == null ? null : json["statusCode"],
     status: json["status"] == null ? null : json["status"],
     message: json["message"] == null ? null : json["message"],
-    response: json["response"] == null ? null : Response.fromJson(json["response"]),
+    response: json["response"] == null ? null : Responses.fromJson(json["response"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -41,8 +41,8 @@ class GetMovieDetails {
   };
 }
 
-class Response {
-  Response({
+class Responses {
+  Responses({
     required this.videoInfo,
     required this.related,
     required this.continueWatchingDetail,
@@ -60,7 +60,7 @@ class Response {
   PaymentInfo? paymentInfo;
   dynamic videoMetaData;
 
-  factory Response.fromJson(Map<String, dynamic> json) => Response(
+  factory Responses.fromJson(Map<String, dynamic> json) => Responses(
     videoInfo: json["video_info"] == null ? null : VideoInfo.fromJson(json["video_info"]),
     related: json["related"] == null ? null : Comments.fromJson(json["related"]),
     continueWatchingDetail: json["continue_watching_detail"],
@@ -81,8 +81,52 @@ class Response {
   };
 }
 
-class Comments {
-  Comments({
+class PurpleDatum {
+  PurpleDatum({
+    required this.id,
+    required this.comment,
+    required this.parentId,
+    required this.userType,
+    required this.customerId,
+    required this.createdAt,
+    required this.replyComment,
+    required this.customer,
+  });
+
+  String? id;
+  String? comment;
+  String? parentId;
+  String? userType;
+  int customerId;
+  String? createdAt;
+  Comments? replyComment;
+  Customer? customer;
+
+  factory PurpleDatum.fromJson(Map<String, dynamic> json) => PurpleDatum(
+    id: json["_id"] == null ? null : json["_id"],
+    comment: json["comment"] == null ? null : json["comment"],
+    parentId: json["parent_id"] == null ? null : json["parent_id"],
+    userType: json["user_type"] == null ? null : json["user_type"],
+    customerId: json["customer_id"] == null ? null : json["customer_id"],
+    createdAt: json["created_at"] == null ? null : json["created_at"],
+    replyComment: json["reply_comment"] == null ? null : Comments.fromJson(json["reply_comment"]),
+    customer: json["customer"] == null ? null : Customer.fromJson(json["customer"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "_id": id == null ? null : id,
+    "comment": comment == null ? null : comment,
+    "parent_id": parentId == null ? null : parentId,
+    "user_type": userType == null ? null : userType,
+    "customer_id": customerId == null ? null : customerId,
+    "created_at": createdAt == null ? null : createdAt,
+    "reply_comment": replyComment == null ? null : replyComment!.toJson(),
+    "customer": customer == null ? null : customer!.toJson(),
+  };
+}
+
+class ReplyComment {
+  ReplyComment({
     required this.currentPage,
     required this.data,
     required this.firstPageUrl,
@@ -97,32 +141,32 @@ class Comments {
     required this.total,
   });
 
-  int? currentPage;
-  List<MovieDetails>? data;
+  int currentPage;
+  List<PurpleDatum>? data;
   String? firstPageUrl;
-  int? from;
-  int? lastPage;
+  int from;
+  int lastPage;
   String? lastPageUrl;
   dynamic nextPageUrl;
   String? path;
-  int? perPage;
+  int perPage;
   dynamic prevPageUrl;
-  int? to;
-  int? total;
+  int to;
+  int total;
 
-  factory Comments.fromJson(Map<String, dynamic> json) => Comments(
-    currentPage: json["current_page"] == null ? null : json["current_page"],
-    data: json["data"] == null ? null : List<MovieDetails>.from(json["data"].map((x) => MovieDetails.fromJson(x))),
-    firstPageUrl: json["first_page_url"] == null ? null : json["first_page_url"],
-    from: json["from"] == null ? null : json["from"],
-    lastPage: json["last_page"] == null ? null : json["last_page"],
-    lastPageUrl: json["last_page_url"] == null ? null : json["last_page_url"],
-    nextPageUrl: json["next_page_url"],
-    path: json["path"] == null ? null : json["path"],
-    perPage: json["per_page"] == null ? null : json["per_page"],
-    prevPageUrl: json["prev_page_url"],
-    to: json["to"] == null ? null : json["to"],
-    total: json["total"] == null ? null : json["total"],
+  factory ReplyComment.fromJson(Map<String, dynamic> json) => ReplyComment(
+    currentPage: json["current_page"] ?? 0,
+    data: json["data"] == null ? null : List<PurpleDatum>.from(json["data"].map((x) => PurpleDatum.fromJson(x))),
+    firstPageUrl: json["first_page_url"] ?? "",
+    from: json["from"] ?? 0,
+    lastPage: json["last_page"] ?? 0,
+    lastPageUrl: json["last_page_url"] ?? "",
+    nextPageUrl: json["next_page_url"] ?? "",
+    path: json["path"] ?? "",
+    perPage: json["per_page"] ?? 0,
+    prevPageUrl: json["prev_page_url"] ?? "",
+    to: json["to"] ?? 0,
+    total: json["total"] ?? 0,
   );
 
   Map<String, dynamic> toJson() => {
@@ -141,8 +185,16 @@ class Comments {
   };
 }
 
-class MovieDetails {
-  MovieDetails({
+class CommentsDatum {
+  CommentsDatum({
+    required this.id,
+    required this.comment,
+    required this.userType,
+    required this.customerId,
+    required this.isActive,
+    required this.createdAt,
+    required this.replyComment,
+    required this.customer,
     required this.title,
     required this.slug,
     required this.thumbnailImage,
@@ -163,47 +215,71 @@ class MovieDetails {
     required this.videoArea,
   });
 
+  String? id;
+  String? comment;
+  String? userType;
+  int customerId;
+  int isActive;
+  String? createdAt;
+  ReplyComment? replyComment;
+  Customer? customer;
   String? title;
   String? slug;
   String? thumbnailImage;
   String? posterImage;
-  int? isFavourite;
-  int? isLive;
-  int? viewCount;
-  int? isPremium;
-  int? price;
-  String? trailerHlsUrl;
-  String? trailerStatus;
+  int isFavourite;
+  int isLive;
+  int viewCount;
+  int isPremium;
+  int price;
+  dynamic trailerHlsUrl;
+  dynamic trailerStatus;
   DateTime? publishedOn;
   String? videoDuration;
   String? description;
   String? genreName;
   String? videoCategoryName;
-  int? isSubscribed;
-  String? videoArea;
+  int isSubscribed;
+  dynamic videoArea;
 
-  factory MovieDetails.fromJson(Map<String, dynamic> json) => MovieDetails(
-    title: json["title"] == null ? null : json["title"],
-    slug: json["slug"] == null ? null : json["slug"],
-    thumbnailImage: json["thumbnail_image"] == null ? null : json["thumbnail_image"],
-    posterImage: json["poster_image"] == null ? null : json["poster_image"],
-    isFavourite: json["is_favourite"] == null ? null : json["is_favourite"],
-    isLive: json["is_live"] == null ? null : json["is_live"],
-    viewCount: json["view_count"] == null ? null : json["view_count"],
-    isPremium: json["is_premium"] == null ? null : json["is_premium"],
-    price: json["price"] == null ? null : json["price"],
-    trailerHlsUrl: json["trailer_hls_url"] == null ? null : json["trailer_hls_url"],
-    trailerStatus: json["trailer_status"] == null ? null : json["trailer_status"],
+  factory CommentsDatum.fromJson(Map<String, dynamic> json) => CommentsDatum(
+    id: json["_id"] ?? "",
+    comment: json["comment"] ?? "",
+    userType: json["user_type"] ?? "",
+    customerId: json["customer_id"] ?? 0,
+    isActive: json["is_active"] ?? 0,
+    createdAt: json["created_at"] ?? "",
+    replyComment: json["reply_comment"] == null ? null : ReplyComment.fromJson(json["reply_comment"]),
+    customer: json["customer"] == null ? null : Customer.fromJson(json["customer"]),
+    title: json["title"] ?? "",
+    slug: json["slug"] ?? "",
+    thumbnailImage: json["thumbnail_image"] ?? "",
+    posterImage: json["poster_image"] ?? "",
+    isFavourite: json["is_favourite"] ?? 0,
+    isLive: json["is_live"] ?? 0,
+    viewCount: json["view_count"] ?? 0,
+    isPremium: json["is_premium"] ?? 0,
+    price: json["price"] ?? 0,
+    trailerHlsUrl: json["trailer_hls_url"] ?? "",
+    trailerStatus: json["trailer_status"] ?? "",
     publishedOn: json["published_on"] == null ? null : DateTime.parse(json["published_on"]),
-    videoDuration: json["video_duration"] == null ? null : json["video_duration"],
-    description: json["description"] == null ? null : json["description"],
-    genreName: json["genre_name"] == null ? null : json["genre_name"],
-    videoCategoryName: json["video_category_name"] == null ? null : json["video_category_name"],
-    isSubscribed: json["is_subscribed"] == null ? null : json["is_subscribed"],
-    videoArea: json["video_area"] == null ? null : json["video_area"],
+    videoDuration: json["video_duration"] ?? "",
+    description: json["description"] ?? "",
+    genreName: json["genre_name"] ?? "",
+    videoCategoryName: json["video_category_name"] ?? "",
+    isSubscribed: json["is_subscribed"] ?? 0,
+    videoArea: json["video_area"],
   );
 
   Map<String, dynamic> toJson() => {
+    "_id": id == null ? null : id,
+    "comment": comment == null ? null : comment,
+    "user_type": userType == null ? null : userType,
+    "customer_id": customerId == null ? null : customerId,
+    "is_active": isActive == null ? null : isActive,
+    "created_at": createdAt == null ? null : createdAt,
+    "reply_comment": replyComment == null ? null : replyComment!.toJson(),
+    "customer": customer == null ? null : customer!.toJson(),
     "title": title == null ? null : title,
     "slug": slug == null ? null : slug,
     "thumbnail_image": thumbnailImage == null ? null : thumbnailImage,
@@ -213,17 +289,151 @@ class MovieDetails {
     "view_count": viewCount == null ? null : viewCount,
     "is_premium": isPremium == null ? null : isPremium,
     "price": price == null ? null : price,
-    "trailer_hls_url": trailerHlsUrl == null ? null : trailerHlsUrl,
-    "trailer_status": trailerStatus == null ? null : trailerStatus,
+    "trailer_hls_url": trailerHlsUrl,
+    "trailer_status": trailerStatus,
     "published_on": publishedOn == null ? null : "${publishedOn!.year.toString().padLeft(4, '0')}-${publishedOn!.month.toString().padLeft(2, '0')}-${publishedOn!.day.toString().padLeft(2, '0')}",
     "video_duration": videoDuration == null ? null : videoDuration,
     "description": description == null ? null : description,
     "genre_name": genreName == null ? null : genreName,
     "video_category_name": videoCategoryName == null ? null : videoCategoryName,
     "is_subscribed": isSubscribed == null ? null : isSubscribed,
-    "video_area": videoArea == null ? null : videoArea,
+    "video_area": videoArea,
   };
 }
+
+class Comments {
+  Comments({
+    required this.currentPage,
+    required this.data,
+    required this.firstPageUrl,
+    required this.from,
+    required this.lastPage,
+    required this.lastPageUrl,
+    required this.nextPageUrl,
+    required this.path,
+    required this.perPage,
+    required this.prevPageUrl,
+    required this.to,
+    required this.total,
+  });
+
+  int currentPage;
+  List<CommentsDatum>? data;
+  String? firstPageUrl;
+  int from;
+  int lastPage;
+  String? lastPageUrl;
+  dynamic nextPageUrl;
+  String? path;
+  int perPage;
+  dynamic prevPageUrl;
+  int to;
+  int total;
+
+  factory Comments.fromJson(Map<String, dynamic> json) => Comments(
+    currentPage: json["current_page"] ?? 0,
+    data: json["data"] == null ? null : List<CommentsDatum>.from(json["data"].map((x) => CommentsDatum.fromJson(x))),
+    firstPageUrl: json["first_page_url"] ?? "",
+    from: json["from"] ?? 0,
+    lastPage: json["last_page"]?? 0,
+    lastPageUrl: json["last_page_url"] ?? "",
+    nextPageUrl: json["next_page_url"] ?? "",
+    path: json["path"] ?? "",
+    perPage: json["per_page"] ?? 0,
+    prevPageUrl: json["prev_page_url"] ?? "",
+    to: json["to"] ?? 0,
+    total: json["total"] ?? "",
+  );
+
+  Map<String, dynamic> toJson() => {
+    "current_page": currentPage == null ? null : currentPage,
+    "data": data == null ? null : List<dynamic>.from(data!.map((x) => x.toJson())),
+    "first_page_url": firstPageUrl == null ? null : firstPageUrl,
+    "from": from == null ? null : from,
+    "last_page": lastPage == null ? null : lastPage,
+    "last_page_url": lastPageUrl == null ? null : lastPageUrl,
+    "next_page_url": nextPageUrl,
+    "path": path == null ? null : path,
+    "per_page": perPage == null ? null : perPage,
+    "prev_page_url": prevPageUrl,
+    "to": to == null ? null : to,
+    "total": total == null ? null : total,
+  };
+}
+
+class Customer {
+  Customer({
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.dob,
+    required this.age,
+    required this.profilePicture,
+    required this.isLocked,
+    required this.notifyEmail,
+    required this.countryCode,
+    required this.iso,
+    required this.customerPaymentId,
+    required this.subscriptionType,
+    required this.customerStripeId,
+    required this.appleAuthId,
+    required this.appleUserId,
+  });
+
+  String? name;
+  String? email;
+  String? phone;
+  String? dob;
+  int age;
+  String? profilePicture;
+  String? isLocked;
+  int notifyEmail;
+  String? countryCode;
+  dynamic iso;
+  String? customerPaymentId;
+  String? subscriptionType;
+  String? customerStripeId;
+  dynamic appleAuthId;
+  dynamic appleUserId;
+
+  factory Customer.fromJson(Map<String, dynamic> json) => Customer(
+    name: json["name"] == null ? null : json["name"],
+    email: json["email"] == null ? null : json["email"],
+    phone: json["phone"] == null ? null : json["phone"],
+    dob: json["dob"] == null ? null : json["dob"],
+    age: json["age"] == null ? null : json["age"],
+    profilePicture: json["profile_picture"] == null ? null : json["profile_picture"],
+    isLocked: json["is_locked"] == null ? null : json["is_locked"],
+    notifyEmail: json["notify_email"] == null ? null : json["notify_email"],
+    countryCode: json["country_code"] == null ? null : json["country_code"],
+    iso: json["iso"],
+    customerPaymentId: json["customer_payment_id"] == null ? null : json["customer_payment_id"],
+    subscriptionType: json["subscription_type"] == null ? null : json["subscription_type"],
+    customerStripeId: json["customer_stripe_id"] == null ? null : json["customer_stripe_id"],
+    appleAuthId: json["apple_auth_id"],
+    appleUserId: json["apple_user_id"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "name": name == null ? null : name,
+    "email": email == null ? null : email,
+    "phone": phone == null ? null : phone,
+    "dob": dob == null ? null : dob,
+    "age": age == null ? null : age,
+    "profile_picture": profilePicture == null ? null : profilePicture,
+    "is_locked": isLocked == null ? null : isLocked,
+    "notify_email": notifyEmail == null ? null : notifyEmail,
+    "country_code": countryCode == null ? null : countryCode,
+    "iso": iso,
+    "customer_payment_id": customerPaymentId == null ? null : customerPaymentId,
+    "subscription_type": subscriptionType == null ? null :subscriptionType,
+    "customer_stripe_id": customerStripeId == null ? null : customerStripeId,
+    "apple_auth_id": appleAuthId,
+    "apple_user_id": appleUserId,
+  };
+}
+
+
 
 class PaymentInfo {
   PaymentInfo({
@@ -233,7 +443,7 @@ class PaymentInfo {
     required this.globalViewCount,
   });
 
-  int? isBought;
+  int isBought;
   dynamic transactionId;
   dynamic userViewCount;
   dynamic globalViewCount;
@@ -313,7 +523,7 @@ class VideoInfo {
   int? isLive;
   String? scheduledStartTime;
   DateTime? publishedOn;
-  dynamic presenter;
+  String? presenter;
   int? isPremium;
   String? posterImage;
   int? viewCount;
@@ -343,7 +553,7 @@ class VideoInfo {
   dynamic seconds;
   String? genreName;
   int? isSubscribed;
-  dynamic videoArea;
+  String? videoArea;
   List<dynamic>? tags;
 
   factory VideoInfo.fromJson(Map<String, dynamic> json) => VideoInfo(
@@ -359,7 +569,7 @@ class VideoInfo {
     isLive: json["is_live"] == null ? null : json["is_live"],
     scheduledStartTime: json["scheduledStartTime"] == null ? null : json["scheduledStartTime"],
     publishedOn: json["published_on"] == null ? null : DateTime.parse(json["published_on"]),
-    presenter: json["presenter"],
+    presenter: json["presenter"] == null ? null : json["presenter"],
     isPremium: json["is_premium"] == null ? null : json["is_premium"],
     posterImage: json["poster_image"] == null ? null : json["poster_image"],
     viewCount: json["view_count"] == null ? null : json["view_count"],
@@ -389,7 +599,7 @@ class VideoInfo {
     seconds: json["seconds"],
     genreName: json["genre_name"] == null ? null : json["genre_name"],
     isSubscribed: json["is_subscribed"] == null ? null : json["is_subscribed"],
-    videoArea: json["video_area"],
+    videoArea: json["video_area"] == null ? null : json["video_area"],
     tags: json["tags"] == null ? null : List<dynamic>.from(json["tags"].map((x) => x)),
   );
 
@@ -406,7 +616,7 @@ class VideoInfo {
     "is_live": isLive == null ? null : isLive,
     "scheduledStartTime": scheduledStartTime == null ? null : scheduledStartTime,
     "published_on": publishedOn == null ? null : "${publishedOn!.year.toString().padLeft(4, '0')}-${publishedOn!.month.toString().padLeft(2, '0')}-${publishedOn!.day.toString().padLeft(2, '0')}",
-    "presenter": presenter,
+    "presenter": presenter == null ? null : presenter,
     "is_premium": isPremium == null ? null : isPremium,
     "poster_image": posterImage == null ? null : posterImage,
     "view_count": viewCount == null ? null : viewCount,
@@ -436,7 +646,7 @@ class VideoInfo {
     "seconds": seconds,
     "genre_name": genreName == null ? null : genreName,
     "is_subscribed": isSubscribed == null ? null : isSubscribed,
-    "video_area": videoArea,
+    "video_area": videoArea == null ? null : videoArea,
     "tags": tags == null ? null : List<dynamic>.from(tags!.map((x) => x)),
   };
 }
@@ -455,8 +665,10 @@ class Subtitle {
     subtitleList: json["subtitle_list"] == null ? null : List<dynamic>.from(json["subtitle_list"].map((x) => x)),
   );
 
-  Map<String, dynamic> toJson() => {
+  Map<String?, dynamic> toJson() => {
     "base_url": baseUrl == null ? null : baseUrl,
     "subtitle_list": subtitleList == null ? null : List<dynamic>.from(subtitleList!.map((x) => x)),
   };
 }
+
+

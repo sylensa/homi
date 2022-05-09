@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
+import 'package:homi/helper/hide.dart';
 import 'package:homi/helper/progress_dialog.dart';
 import 'package:homi/pages/index.dart';
 import 'package:homi/screens/login/index.dart';
@@ -21,6 +22,7 @@ class _ManageProfileState extends State<ManageProfile> {
   bool progressCode = true;
   String errorMessage ='';
   var js;
+
   getScreens()async{
     // try{
      js = await doGet('users/api/v2/screens');

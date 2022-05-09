@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:homi/helper/helper.dart';
+import 'package:homi/helper/hide.dart';
 import 'package:homi/helper/progress_dialog.dart';
 import 'package:homi/pages/index.dart';
 import 'package:homi/screens/profile/index.dart';
@@ -38,6 +39,7 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       print("res createDummy: $js");
+      print("res access_token: ${js["response"]["access_token"]}");
 
       if(js["status"] == 'success'){
         ResponseData responseData = ResponseData.fromJson(js["response"]);
@@ -64,15 +66,15 @@ class _LoginPageState extends State<LoginPage> {
             screenImage: responseData.screenImage,
             response: jsonEncode(js["response"])
         );
-        await userAccountController.dropUserData("user_account");
+        await userAccountController.deleteUserData();
         await userAccountController.saveUserData(_responseData);
         List<Map<String, dynamic>> timelineResponse = await userAccountController.fetchUserData("user_account");
         print("response:${timelineResponse[0]["response"]}");
         Map<String, dynamic> res = json.decode(timelineResponse[0]["response"]);
         ResponseData dataData = ResponseData.fromJson(res);
+        responseUserData.clear();
         responseUserData.add(dataData);
         userToken = responseUserData[0].accessToken;
-        print("id:${responseUserData[0].id}");
         Navigator.pop(context);
         goTo(context, ManageProfile(),replace: true);
         toast("Account logged in successfully");
