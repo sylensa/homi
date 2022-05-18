@@ -33,6 +33,8 @@ class _MoviePageState extends State<MoviePage> {
   List<PurpleDatum> listReplyComments = [];
   int secondsWatched = 0;
   bool isMore = false;
+  bool isPlay = false;
+  bool isTrailer = true;
   bool progressCode = false;
   bool loading = false;
   double progres = 0;
@@ -58,7 +60,12 @@ class _MoviePageState extends State<MoviePage> {
     await Share.share("ds", subject: "TopFives",);
   }
 
-  VideoController? vcs ;
+  VideoController? _controller;
+  Future<void>? _initializeVideoPlayerFuture;
+  int? _playBackTime;
+
+  //The values that are passed when changing quality
+  Duration? newCurrentPosition;
 
   getMovieDetails()async{
     // try{
@@ -67,14 +74,7 @@ class _MoviePageState extends State<MoviePage> {
     if(js["status"] == 'success'){
       Responses responseScreens = Responses.fromJson(js["response"]);
       movie_details.add(responseScreens);
-      vcs = (VideoController(source: VideoPlayerController.network(movie_details[0].videoInfo!.hlsPlaylistUrl!),autoplay: true,)
-        ..initialize())
-        ..addListener(() {
-          if(vcs!.value.position.inSeconds == 30){
-            print("pSeconds value:${vcs!.value.position.inSeconds}");
-          }
-          secondsWatched = vcs!.value.position.inSeconds;
-        });
+     await  initialPlayer(movie_details[0].videoInfo!.trailerHlsUrl != null ? movie_details[0].videoInfo!.trailerHlsUrl! : "");
       setState(() {
         print("len:${movie_details[0].videoInfo!.description!.length}");
         if(movie_details[0].videoInfo!.description!.length > 30){
@@ -581,9 +581,73 @@ class _MoviePageState extends State<MoviePage> {
 
   }
 
+  initialPlayer(String url)async{
+    _controller =(VideoController(source: VideoPlayerController.network(url),autoplay: true,)
+        ..initialize())
+      ..addListener(() {
+        if(_controller!.value.position.inSeconds == 30){
+          print("pSeconds value:${_controller!.value.position.inSeconds}");
+        }
+        secondsWatched = _controller!.value.position.inSeconds;
+      });
+    setState(() {
+
+    });
+    // _initializeVideoPlayerFuture = _controller!.initialize();
+
+
+  }
+
+  Future<bool> _clearPrevious() async {
+    await _controller?.pause();
+    return true;
+  }
+
+  Future<void> _initializePlay(String videoPath) async {
+    _controller = (VideoController(source: VideoPlayerController.network(videoPath),autoplay: true,))
+      ..addListener(() {
+        if(_controller!.value.position.inSeconds == 30){
+          print("pSeconds value:${_controller!.value.position.inSeconds}");
+        }
+        secondsWatched = _controller!.value.position.inSeconds;
+      });
+    setState(() {
+
+    });
+    _initializeVideoPlayerFuture = _controller!.initialize().then((_) {
+      _controller!.seekTo(newCurrentPosition!);
+      _controller!.play();
+    });
+  }
+
+  void _getValuesAndPlay(String videoPath) {
+
+    if(!isTrailer){
+      newCurrentPosition = _controller!.value.position;
+    }
+    _startPlay(videoPath);
+    print(newCurrentPosition.toString());
+  }
+
+  Future<void> _startPlay(String videoPath) async {
+    setState(() {
+      _initializeVideoPlayerFuture = null;
+      isPlay = true;
+      isTrailer = false;
+    });
+    Future.delayed(const Duration(milliseconds: 200), () {
+      _clearPrevious().then((_) {
+        _initializePlay(videoPath);
+      });
+    });
+  }
+
   @override
   void dispose() {
-    vcs!.dispose();//dispose the VideoPlayer
+    _initializeVideoPlayerFuture = null;
+    _controller?.pause().then((_) {
+      _controller!.dispose();
+    });
     super.dispose();
   }
   @override
@@ -595,428 +659,1486 @@ class _MoviePageState extends State<MoviePage> {
 
   @override
   Widget build(BuildContext context) {
+   return FutureBuilder(
+      future: _initializeVideoPlayerFuture,
+      builder: (context, snapshot) {
+        return Scaffold(
+          backgroundColor: themeAppBarColors(),
+          body: Container(
+            width: appWidth(context),
+            child: movie_details.isNotEmpty ?
+            Stack(
+              children: [
+                Column(
+                  children: [
+                snapshot.connectionState == ConnectionState.done ?
+                    Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 0.0),
+                          child: AspectRatio(
+                              aspectRatio: 16 / 9,
+                              child: VideoBox(
+                                customLoadingWidget: Container(),
+                                // customLoadingWidget: Center(child: progress()),
+                                controller: _controller!,
+                                background: Container(
+                                    width: appWidth(context),
+                                    child: Image.network(
+                                      "${movie_details[0].videoInfo!.posterImage}",
+                                      fit: BoxFit.fitWidth,)),
+                                // cover: sText("${VideoController(source: VideoPlayerController.network(url),autoplay: true,initPosition: Duration(minutes: 9)).positionText}"),
+                              )
+                          ),
+                        ),
+                        Positioned(
+                          top: 20,
+                          child: IconButton(
+                              onPressed: () {
+                                print("secondsWatched:$secondsWatched");
+                                Navigator.pop(context);
+                              },
+                              icon: Icon(Icons.arrow_back)),
+                        )
+                      ],
+                    ) :
+                Padding(
+                  padding: const EdgeInsets.only(top: 0.0),
+                  child: AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: VideoBox(
+                        customLoadingWidget: Container(),
+                        // customLoadingWidget: Center(child: progress()),
+                        controller: _controller!,
+                        background: Container(
+                            width: appWidth(context),
+                            child: Image.network(
+                              "${movie_details[0].videoInfo!.posterImage}",
+                              fit: BoxFit.fitWidth,)),
+                        // cover: sText("${VideoController(source: VideoPlayerController.network(url),autoplay: true,initPosition: Duration(minutes: 9)).positionText}"),
+                      )
+                  ),
+                ),
+                    !isComment ?
+                    Expanded(
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.only(
+                                    left: 20, right: 20, top: 10),
+                                child: sText("${properCase(
+                                    movie_details[0].videoInfo!.title!)}",
+                                    weight: FontWeight.bold),
+                              ),
+                              Container(
+                                padding: EdgeInsets.only(
+                                    left: 20, right: 20, top: 10),
+                                child: sText2("${properCase(
+                                    movie_details[0].videoInfo!
+                                        .videoCategoryName!)} . ${properCase(
+                                    movie_details[0].videoInfo!.genreName!)}",
+                                    weight: FontWeight.w600, color: Colors.grey),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    if (isMore) {
+                                      isMore = false;
+                                    } else {
+                                      isMore = true;
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  width: appWidth(context),
+                                  padding: EdgeInsets.only(
+                                      left: 20, right: 20, top: 10),
+                                  child: Text.rich(
+                                    TextSpan(
+                                        text: '${properCase(
+                                            isMore
+                                                ? movie_details[0].videoInfo!
+                                                .description!.substring(1, 10)
+                                                : movie_details[0].videoInfo!
+                                                .description!)} ',
+                                        children: <InlineSpan>[
+                                          if(movie_details[0].videoInfo!
+                                              .description!.length > 30)
+                                            TextSpan(
+                                              text: isMore
+                                                  ? 'Read more'
+                                                  : 'Read less',
+                                              style: appStyle(col: dPurple),
 
-    return Scaffold(
-      backgroundColor: themeAppBarColors(),
-      appBar: AppBar(
-        backgroundColor: themeAppBarColors(),
-
-        title:sText("${properCase(widget.title)}",color: themeAppColors(),weight: FontWeight.w700,family: "ProximaBold"),
-        elevation: 0,
-        centerTitle: false,
-        leading: IconButton(onPressed: (){
-          print("secondsWatched:$secondsWatched");
-          Navigator.pop(context);
-        }, icon: Icon(Icons.arrow_back_ios,color: themeAppColors(),)),
-        actions: [
-          Container(
-            margin: rightPadding(5),
-            child: Icon(Icons.search,color: themeAppColors(),),
-          ),
-          responseScreenUser.isNotEmpty ?
-          Row(
-            children: [
-              Container(
-                margin: rightPadding(10),
-                child: Icon(Icons.notifications_outlined,color: themeAppColors(),),
-              ),
-              Container(
-                margin: rightPadding(20),
-                child: displayImage("${responseScreenUser[0].profileImage}",width: 30,height: 30),
-              )
-            ],
-          ) :
-          Container(
-            margin: rightPadding(10),
-            child: Icon(Icons.person,color: themeAppColors(),),
-          ),
-        ],
-      ),
-      body: Container(
-        width: appWidth(context),
-        child:   movie_details.isNotEmpty ?
-        Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: VideoBox(
-                    customLoadingWidget: Center(child: progress()),
-
-                    controller: vcs!,
-                    background: Container(
-                        width: appWidth(context),
-                        child: Image.network("${movie_details[0].videoInfo!.posterImage}",fit: BoxFit.fitWidth,)),
-                    // cover: sText("${VideoController(source: VideoPlayerController.network(url),autoplay: true,initPosition: Duration(minutes: 9)).positionText}"),
-                  )
-              ),
-            ),
-            !isComment ?
-           Expanded(
-             child: ListView(
-                 children: [
-                   Column(
-                     crossAxisAlignment: CrossAxisAlignment.start,
-                     children: [
-                       Container(
-                         padding: EdgeInsets.only(left: 20,right: 20,top: 10),
-                         child: sText("${properCase(movie_details[0].videoInfo!.title!)}",weight: FontWeight.bold),
-                       ),
-                       Container(
-                         padding: EdgeInsets.only(left: 20,right: 20,top: 10),
-                         child: sText2("${properCase(movie_details[0].videoInfo!.videoCategoryName!)} . ${properCase(movie_details[0].videoInfo!.genreName!)}",weight: FontWeight.w600,color: Colors.grey),
-                       ),
-                       GestureDetector(
-                         onTap: (){
-                           setState(() {
-                             if(isMore){
-                               isMore = false;
-                             }else{
-                               isMore = true;
-                             }
-
-                           });
-                         },
-                         child: Container(
-                           width: appWidth(context),
-                           padding: EdgeInsets.only(left: 20,right: 20,top: 10),
-                           child:   Text.rich(
-                             TextSpan(
-                                 text: '${properCase(isMore ? movie_details[0].videoInfo!.description!.substring(1,10) : movie_details[0].videoInfo!.description!)} ',
-                                 children: <InlineSpan>[
-                                   if(movie_details[0].videoInfo!.description!.length > 30)
-                                     TextSpan(
-                                       text: isMore ? 'Read more' : 'Read less',
-                                       style: appStyle(col: dPurple),
-
-                                     )
-                                 ]
-                             ),
-                             maxLines: isMore ? 4 : 10,
-
-
-                           ),
-                         ),
-                       ),
-                       Container(
-                         padding: leftPadding(10),
-                         child: Row(
-                           children: [
-                             Container(
-                               child: Row(
-                                 children: [
-                                   IconButton(onPressed: (){
-                                     setState(() {
-                                       if(movie_details[0].videoInfo!.isLike! == 1){
-                                         final m_details = movie_details[0];
-                                         m_details.videoInfo!.likeCount = movie_details[0].videoInfo!.likeCount! - 1;
-                                         m_details.videoInfo!.isLike = 0;
-                                         movie_details[0] = m_details;
-                                       }else{
-                                         final m_details = movie_details[0];
-                                         m_details.videoInfo!.likeCount = movie_details[0].videoInfo!.likeCount! + 1;
-                                         m_details.videoInfo!.isLike = 1;
-                                         if(movie_details[0].videoInfo!.isDislike! == 1){
-                                           m_details.videoInfo!.dislikeCount = movie_details[0].videoInfo!.dislikeCount! - 1;
-                                         }
-                                         m_details.videoInfo!.isDislike = 0;
-
-                                         movie_details[0] = m_details;
-                                       }
-                                       likeMovie(slug: movie_details[0].videoInfo!.slug!);
+                                            )
+                                        ]
+                                    ),
+                                    maxLines: isMore ? 4 : 10,
 
 
-                                     });
-                                   }, icon: Icon(Icons.thumb_up,color: movie_details[0].videoInfo!.isLike! == 1 ? dPurple : Colors.grey,)),
-                                   sText2("${movie_details[0].videoInfo!.likeCount}",color: Colors.white,weight: FontWeight.bold)
-                                 ],
-                               ),
-                             ),
-                             Container(
-                               child: Row(
-                                 children: [
-                                   IconButton(onPressed: (){
-                                     setState(() {
-                                       if(movie_details[0].videoInfo!.isDislike! == 1){
-                                         final m_details = movie_details[0];
-                                         m_details.videoInfo!.isDislike = 0;
-                                         m_details.videoInfo!.dislikeCount = movie_details[0].videoInfo!.dislikeCount! - 1;
-                                         movie_details[0] = m_details;
-                                       }else{
-                                         final m_details = movie_details[0];
-                                         if(movie_details[0].videoInfo!.isLike! == 1){
-                                           print("hey");
-                                           m_details.videoInfo!.likeCount = movie_details[0].videoInfo!.likeCount! - 1;
-                                         }
-                                         m_details.videoInfo!.isLike = 0;
-                                         m_details.videoInfo!.isDislike = 1;
-                                         m_details.videoInfo!.dislikeCount = movie_details[0].videoInfo!.dislikeCount! + 1;
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: leftPadding(10),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      child: Row(
+                                        children: [
+                                          IconButton(onPressed: () {
+                                            setState(() {
+                                              if (movie_details[0].videoInfo!
+                                                  .isLike! == 1) {
+                                                final m_details = movie_details[0];
+                                                m_details.videoInfo!.likeCount =
+                                                    movie_details[0].videoInfo!
+                                                        .likeCount! - 1;
+                                                m_details.videoInfo!.isLike = 0;
+                                                movie_details[0] = m_details;
+                                              } else {
+                                                final m_details = movie_details[0];
+                                                m_details.videoInfo!.likeCount =
+                                                    movie_details[0].videoInfo!
+                                                        .likeCount! + 1;
+                                                m_details.videoInfo!.isLike = 1;
+                                                if (movie_details[0].videoInfo!
+                                                    .isDislike! == 1) {
+                                                  m_details.videoInfo!
+                                                      .dislikeCount =
+                                                      movie_details[0].videoInfo!
+                                                          .dislikeCount! - 1;
+                                                }
+                                                m_details.videoInfo!.isDislike = 0;
 
-                                         movie_details[0] = m_details;
-                                       }
-                                       disLikeMovie(slug: movie_details[0].videoInfo!.slug!);
+                                                movie_details[0] = m_details;
+                                              }
+                                              likeMovie(
+                                                  slug: movie_details[0].videoInfo!
+                                                      .slug!);
+                                            });
+                                          },
+                                              icon: Icon(Icons.thumb_up,
+                                                color: movie_details[0].videoInfo!
+                                                    .isLike! == 1 ? dPurple : Colors
+                                                    .grey,)),
+                                          sText2("${movie_details[0].videoInfo!
+                                              .likeCount}", color: Colors.white,
+                                              weight: FontWeight.bold)
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      child: Row(
+                                        children: [
+                                          IconButton(onPressed: () {
+                                            setState(() {
+                                              if (movie_details[0].videoInfo!
+                                                  .isDislike! == 1) {
+                                                final m_details = movie_details[0];
+                                                m_details.videoInfo!.isDislike = 0;
+                                                m_details.videoInfo!.dislikeCount =
+                                                    movie_details[0].videoInfo!
+                                                        .dislikeCount! - 1;
+                                                movie_details[0] = m_details;
+                                              } else {
+                                                final m_details = movie_details[0];
+                                                if (movie_details[0].videoInfo!
+                                                    .isLike! == 1) {
+                                                  print("hey");
+                                                  m_details.videoInfo!.likeCount =
+                                                      movie_details[0].videoInfo!
+                                                          .likeCount! - 1;
+                                                }
+                                                m_details.videoInfo!.isLike = 0;
+                                                m_details.videoInfo!.isDislike = 1;
+                                                m_details.videoInfo!.dislikeCount =
+                                                    movie_details[0].videoInfo!
+                                                        .dislikeCount! + 1;
 
-                                     });
-                                   }, icon: Icon(Icons.thumb_down,color: movie_details[0].videoInfo!.isDislike! == 1 ? dPurple : Colors.grey,)),
-                                   sText2("${movie_details[0].videoInfo!.dislikeCount}",color: Colors.white,weight: FontWeight.bold)
-                                 ],
-                               ),
-                             ),
-                             SizedBox(width: 10,),
-                             movie_details[0].videoInfo!.price! == 0 ?
-                             Container(
-                               padding: EdgeInsets.only(left: 5,right: 10,top: 5,bottom: 5),
-                               decoration: BoxDecoration(
-                                   color: Colors.grey,
-                                   borderRadius: BorderRadius.circular(5)
-                               ),
-                               child: Row(
-                                 children: [
-                                   Icon(Icons.play_arrow,color: Colors.white,),
-                                   sText2("Play movie",color: Colors.white,weight: FontWeight.bold)
-                                 ],
-                               ),
-                             ) :
-                             Container(
-                               child: sText("RENT \$${movie_details[0].videoInfo!.price}"),
-                               padding: appPadding(5),
-                               decoration: BoxDecoration(
-                                   border: Border.all(color: dPurple),
-                                   borderRadius: BorderRadius.circular(5)
-                               ),
-                             )
-                             ,
-                           ],
-                         ),
-                       ),
-                       Container(
-                         padding: leftPadding(20),
-                         child: Row(
-                           children: [
-                             Container(
-                               child: Row(
-                                 children: [
-                                   sText2("Release Date",color: Colors.grey,weight: FontWeight.bold),
-                                   SizedBox(width: 10,),
-                                   sText("${DateFormat.MMMEd().format(movie_details[0].videoInfo!.publishedOn!)}",color: Colors.white,weight: FontWeight.bold)
-                                 ],
-                               ),
-                             ),
-                             SizedBox(width: 20,),
-                             Container(
-                               child: Row(
-                                 children: [
-                                   sText2("Views",color: Colors.grey,weight: FontWeight.bold),
-                                   SizedBox(width: 5,),
-                                   sText("${movie_details[0].videoInfo!.viewCount}",color: Colors.white,weight: FontWeight.bold)
-                                 ],
-                               ),
-                             ),
-                           ],
-                         ),
-                       ),
-                       SizedBox(height: 10,),
-                       Container(
-                         padding: leftPadding(20),
-                         child: Column(
-                           crossAxisAlignment: CrossAxisAlignment.start,
-                           children: [
-                             sText("Starring",color: Colors.white,weight: FontWeight.bold),
-                             SizedBox(height: 5,),
-                             sText2("${movie_details[0].videoInfo!.presenter == null ? "" : movie_details[0].videoInfo!.presenter}",color: Colors.grey,weight: FontWeight.bold),
+                                                movie_details[0] = m_details;
+                                              }
+                                              disLikeMovie(
+                                                  slug: movie_details[0].videoInfo!
+                                                      .slug!);
+                                            });
+                                          },
+                                              icon: Icon(Icons.thumb_down,
+                                                color: movie_details[0].videoInfo!
+                                                    .isDislike! == 1
+                                                    ? dPurple
+                                                    : Colors.grey,)),
+                                          sText2("${movie_details[0].videoInfo!
+                                              .dislikeCount}", color: Colors.white,
+                                              weight: FontWeight.bold)
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(width: 10,),
+                                    movie_details[0].videoInfo!.price! == 0 ?
+                                    GestureDetector(
+                                      onTap: () async {
+                                        setState(() {
+                                          isPlay = true;
+                                        });
+                                        _getValuesAndPlay(
+                                            movie_details[0].videoInfo!
+                                                .hlsPlaylistUrl!);
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.only(
+                                            left: 5, right: 10, top: 5, bottom: 5),
+                                        decoration: BoxDecoration(
+                                            color: Colors.grey,
+                                            borderRadius: BorderRadius.circular(5)
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.play_arrow,
+                                              color: Colors.white,),
+                                            sText2(
+                                                "Play movie", color: Colors.white,
+                                                weight: FontWeight.bold),
+                                            SizedBox(width: 5,),
+                                            snapshot.connectionState == ConnectionState.done ? Container() : isPlay ? progress(size: 10) : Container()
+                                          ],
+                                        ),
+                                      ),
+                                    ) :
+                                    Container(
+                                      child: sText(
+                                          "RENT \$${movie_details[0].videoInfo!
+                                              .price}"),
+                                      padding: appPadding(5),
+                                      decoration: BoxDecoration(
+                                          border: Border.all(color: dPurple),
+                                          borderRadius: BorderRadius.circular(5)
+                                      ),
+                                    )
+                                    ,
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: leftPadding(20),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      child: Row(
+                                        children: [
+                                          sText2("Release Date", color: Colors.grey,
+                                              weight: FontWeight.bold),
+                                          SizedBox(width: 10,),
+                                          sText("${DateFormat.MMMEd().format(
+                                              movie_details[0].videoInfo!
+                                                  .publishedOn!)}",
+                                              color: Colors.white,
+                                              weight: FontWeight.bold)
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(width: 20,),
+                                    Container(
+                                      child: Row(
+                                        children: [
+                                          sText2("Views", color: Colors.grey,
+                                              weight: FontWeight.bold),
+                                          SizedBox(width: 5,),
+                                          sText("${movie_details[0].videoInfo!
+                                              .viewCount}", color: Colors.white,
+                                              weight: FontWeight.bold)
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 10,),
+                              Container(
+                                padding: leftPadding(20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    sText("Starring", color: Colors.white,
+                                        weight: FontWeight.bold),
+                                    SizedBox(height: 5,),
+                                    sText2(
+                                        "${movie_details[0].videoInfo!.presenter ==
+                                            null ? "" : movie_details[0].videoInfo!
+                                            .presenter}", color: Colors.grey,
+                                        weight: FontWeight.bold),
 
-                           ],
-                         ),
-                       ),
-                       Container(
-                         padding: EdgeInsets.only(left: 20,right: 20),
-                         child: Divider(color: Colors.grey[200],),
-                       ),
-                       Container(
-                         padding: EdgeInsets.only(left: 20,right: 20),
-                         child: Row(
-                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                           children: [
-                             movie_details[0].videoInfo!.isFavourite! == 1 ?
-                             GestureDetector(
-                               onTap: (){
-                                 setState(() {
-                                   final m_details = movie_details[0];
-                                   m_details.videoInfo!.isFavourite = 0;
-                                   movie_details[0] = m_details;
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.only(left: 20, right: 20),
+                                child: Divider(color: Colors.grey[200],),
+                              ),
+                              Container(
+                                padding: EdgeInsets.only(left: 20, right: 20),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    movie_details[0].videoInfo!.isFavourite! == 1 ?
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          final m_details = movie_details[0];
+                                          m_details.videoInfo!.isFavourite = 0;
+                                          movie_details[0] = m_details;
+                                        });
+                                        removeMovieFromFavourite(
+                                            slug: movie_details[0].videoInfo!
+                                                .slug!);
+                                      },
+                                      child: Container(
+                                        child: Column(
+                                          children: [
+                                            Icon(Icons.favorite, color: dPurple,),
+                                            sText2("Favourite", color: Colors.grey)
+                                          ],
+                                        ),
+                                      ),
+                                    ) :
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          final m_details = movie_details[0];
+                                          m_details.videoInfo!.isFavourite = 1;
+                                          movie_details[0] = m_details;
+                                        });
+                                        addMovieToFavourite(
+                                            slug: movie_details[0].videoInfo!
+                                                .slug!);
+                                      },
+                                      child: Container(
+                                        child: Column(
+                                          children: [
+                                            Icon(
+                                              Icons.favorite, color: Colors.grey,),
+                                            sText2("Favourite", color: Colors.grey)
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        _onShareData(context);
+                                      },
+                                      child: Container(
+                                        child: Column(
+                                          children: [
+                                            Icon(Icons.share, color: Colors.grey,),
+                                            sText2("Share", color: Colors.grey)
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        goTo(context, ListPlaylist(
+                                          responseScreens: responseScreenUser[0],
+                                          slug: movie_details[0].videoInfo!
+                                              .slug!,));
+                                      },
+                                      child: Container(
+                                        child: Column(
+                                          children: [
+                                            Icon(Icons.playlist_add,
+                                              color: Colors.grey,),
+                                            sText2("Playlist", color: Colors.grey)
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        downloadFile();
+                                      },
+                                      child: Container(
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(Icons.download,
+                                                  color: Colors.grey,),
+                                                loading
+                                                    ? progress(size: 5)
+                                                    : Container()
+                                              ],
+                                            ),
+                                            sText2("Download", color: Colors.grey)
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          isComment = true;
+                                        });
+                                      },
+                                      child: Container(
+                                        child: Column(
+                                          children: [
+                                            Icon(
+                                              Icons.comment, color: Colors.grey,),
+                                            sText2("Comment", color: Colors.grey)
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
 
-                                 });
-                                 removeMovieFromFavourite(slug: movie_details[0].videoInfo!.slug!);
-                               },
-                               child: Container(
-                                 child: Column(
-                                   children: [
-                                     Icon(Icons.favorite,color: dPurple,),
-                                     sText2("Favourite",color: Colors.grey)
-                                   ],
-                                 ),
-                               ),
-                             ) :
-                             GestureDetector(
-                               onTap: (){
-                                 setState(() {
-                                   final m_details = movie_details[0];
-                                   m_details.videoInfo!.isFavourite = 1;
-                                   movie_details[0] = m_details;
-                                 });
-                                 addMovieToFavourite(slug: movie_details[0].videoInfo!.slug!);
-                               },
-                               child: Container(
-                                 child: Column(
-                                   children: [
-                                     Icon(Icons.favorite,color: Colors.grey,),
-                                     sText2("Favourite",color: Colors.grey)
-                                   ],
-                                 ),
-                               ),
-                             ),
-                             GestureDetector(
-                               onTap: (){
-                                 _onShareData(context);
-                               },
-                               child: Container(
-                                 child: Column(
-                                   children: [
-                                     Icon(Icons.share,color: Colors.grey,),
-                                     sText2("Share",color: Colors.grey)
-                                   ],
-                                 ),
-                               ),
-                             ),
-                             GestureDetector(
-                               onTap: (){
-                                 goTo(context, ListPlaylist(responseScreens: responseScreenUser[0],slug: movie_details[0].videoInfo!.slug!,));
-                               },
-                               child: Container(
-                                 child: Column(
-                                   children: [
-                                     Icon(Icons.playlist_add,color: Colors.grey,),
-                                     sText2("Playlist",color: Colors.grey)
-                                   ],
-                                 ),
-                               ),
-                             ),
-                             GestureDetector(
-                               onTap: (){
-                                 downloadFile();
-                               },
-                               child: Container(
-                                 child: Column(
-                                   children: [
-                                     Row(
-                                       children: [
-                                         Icon(Icons.download,color: Colors.grey,),
-                                         loading ? progress(size: 5) : Container()
-                                       ],
-                                     ),
-                                     sText2("Download",color: Colors.grey)
-                                   ],
-                                 ),
-                               ),
-                             ),
-                             GestureDetector(
-                               onTap: (){
-                                 setState(() {
-                                   isComment = true;
-                                 });
-                               },
-                               child: Container(
-                                 child: Column(
-                                   children: [
-                                     Icon(Icons.comment,color: Colors.grey,),
-                                     sText2("Comment",color: Colors.grey)
-                                   ],
-                                 ),
-                               ),
-                             ),
-                           ],
-                         ),
-                       ),
-
-                       Container(
-                         padding: EdgeInsets.only(left: 20,right: 20),
-                         child: Divider(color: Colors.grey[200],),
-                       ),
-                       SizedBox(height: 5,),
-                       Container(
-                         margin: leftPadding(10),
-                         child: Column(
-                           crossAxisAlignment: CrossAxisAlignment.start,
-                           children: [
-                             Container(
-                               margin: leftPadding(10),
-                               child: sText("Related Videos",weight: FontWeight.bold),
-                             ),
-                             SizedBox(height: 15,),
-                             Container(
-                               height: 150,
-                               margin: leftPadding(5),
-                               child: ListView.builder(
-                                   itemCount: movie_details[0].related!.data!.length,
-                                   shrinkWrap: true,
-                                   physics: ClampingScrollPhysics(),
-                                   scrollDirection: Axis.horizontal,
-                                   itemBuilder: (BuildContext context, int index){
-                                     return  GestureDetector(
-                                       onTap: (){
-                                         vcs!.pause();
-                                         goTo(context, MoviePage(slug: movie_details[0].related!.data![index].slug!,title: movie_details[0].related!.data![index].title!,));
-
-                                       },
-                                       child: Row(
-                                         children: [
-                                           SizedBox(width: 5,),
-                                           Stack(
-                                             children: [
-                                               ClipRRect(
-                                                 borderRadius: BorderRadius.circular(5.0),
-                                                 child: Container(
-                                                   height: 150,
-                                                   child: displayImage("${movie_details[0].related!.data![index].thumbnailImage}",width: 100,radius: 0),
-                                                 ),
-                                               ),
-                                               Positioned(
-                                                 right: 0,
-                                                 child: Container(
-                                                     padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),
-                                                     decoration: BoxDecoration(
-                                                         color: Colors.black26,
-                                                         borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
-                                                     ),
-                                                     child: popUpMenu(movieId: movie_details[0].related!.data![index].slug!,context: context)
-                                                 ),
-                                               )
-                                             ],
-                                           ),
-                                         ],
-                                       ),
-                                     );
-                                   }),
-                             ),
-                           ],
-                         ),
-                       )
-                     ],
-                   )
-                 ],
-             ),
-           )
+                              Container(
+                                padding: EdgeInsets.only(left: 20, right: 20),
+                                child: Divider(color: Colors.grey[200],),
+                              ),
+                              SizedBox(height: 5,),
+                              Container(
+                                margin: leftPadding(10),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      margin: leftPadding(10),
+                                      child: sText("Related Videos",
+                                          weight: FontWeight.bold),
+                                    ),
+                                    SizedBox(height: 15,),
+                                    Container(
+                                      height: 150,
+                                      margin: leftPadding(5),
+                                      child: ListView.builder(
+                                          itemCount: movie_details[0].related!.data!
+                                              .length,
+                                          shrinkWrap: true,
+                                          physics: ClampingScrollPhysics(),
+                                          scrollDirection: Axis.horizontal,
+                                          itemBuilder: (BuildContext context,
+                                              int index) {
+                                            return GestureDetector(
+                                              onTap: () {
+                                                _controller!.pause();
+                                                goTo(context, MoviePage(
+                                                  slug: movie_details[0].related!
+                                                      .data![index].slug!,
+                                                  title: movie_details[0].related!
+                                                      .data![index].title!,));
+                                              },
+                                              child: Row(
+                                                children: [
+                                                  SizedBox(width: 5,),
+                                                  Stack(
+                                                    children: [
+                                                      ClipRRect(
+                                                        borderRadius: BorderRadius
+                                                            .circular(5.0),
+                                                        child: Container(
+                                                          height: 150,
+                                                          child: displayImage(
+                                                              "${movie_details[0]
+                                                                  .related!
+                                                                  .data![index]
+                                                                  .thumbnailImage}",
+                                                              width: 100,
+                                                              radius: 0),
+                                                        ),
+                                                      ),
+                                                      Positioned(
+                                                        right: 0,
+                                                        child: Container(
+                                                            padding: EdgeInsets
+                                                                .only(left: 5,
+                                                                top: 3,
+                                                                bottom: 5,
+                                                                right: 0),
+                                                            decoration: BoxDecoration(
+                                                                color: Colors
+                                                                    .black26,
+                                                                borderRadius: BorderRadius
+                                                                    .only(
+                                                                    bottomLeft: Radius
+                                                                        .circular(
+                                                                        30))
+                                                            ),
+                                                            child: popUpMenu(
+                                                                movieId: movie_details[0]
+                                                                    .related!
+                                                                    .data![index]
+                                                                    .slug!,
+                                                                context: context)
+                                                        ),
+                                                      )
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          )
+                        ],
+                      ),
+                    )
+                        :
+                    loadCommentReplies()
+                  ],
+                ),
+                Positioned(
+                  top: 20,
+                  child: IconButton(
+                      onPressed: () {
+                        print("secondsWatched:$secondsWatched");
+                        Navigator.pop(context);
+                      },
+                      icon: Icon(Icons.arrow_back)),
+                )
+              ],
+            )
                 :
-            loadCommentReplies()
-          ],
-        ) :  Column(
-          children: [
-            Expanded(child: Center(child: progress(),)),
-          ],
-        ),
-      ),
+            Column(
+              children: [
+                Expanded(child: Center(child: progress(),)),
+              ],
+            ),
+          ),
+        );
+      }
     );
+    // return Scaffold(
+    //   backgroundColor: themeAppBarColors(),
+    //   appBar: AppBar(
+    //     backgroundColor: themeAppBarColors(),
+    //
+    //     title:sText("${properCase(widget.title)}",color: themeAppColors(),weight: FontWeight.w700,family: "ProximaBold"),
+    //     elevation: 0,
+    //     centerTitle: false,
+    //     leading: IconButton(onPressed: (){
+    //       print("secondsWatched:$secondsWatched");
+    //       Navigator.pop(context);
+    //     }, icon: Icon(Icons.arrow_back_ios,color: themeAppColors(),)),
+    //     actions: [
+    //       Container(
+    //         margin: rightPadding(5),
+    //         child: Icon(Icons.search,color: themeAppColors(),),
+    //       ),
+    //       responseScreenUser.isNotEmpty ?
+    //       Row(
+    //         children: [
+    //           Container(
+    //             margin: rightPadding(10),
+    //             child: Icon(Icons.notifications_outlined,color: themeAppColors(),),
+    //           ),
+    //           Container(
+    //             margin: rightPadding(20),
+    //             child: displayImage("${responseScreenUser[0].profileImage}",width: 30,height: 30),
+    //           )
+    //         ],
+    //       ) :
+    //       Container(
+    //         margin: rightPadding(10),
+    //         child: Icon(Icons.person,color: themeAppColors(),),
+    //       ),
+    //     ],
+    //   ),
+    //   body: Container(
+    //     width: appWidth(context),
+    //     child:   movie_details.isNotEmpty ?
+    //     Column(
+    //       children: [
+    //         Padding(
+    //           padding: const EdgeInsets.only(top: 12.0),
+    //           child: AspectRatio(
+    //               aspectRatio: 16 / 9,
+    //               child: VideoBox(
+    //                 customLoadingWidget: Container(),
+    //                 // customLoadingWidget: Center(child: progress()),
+    //                 controller: _controller!,
+    //                 background: Container(
+    //                     width: appWidth(context),
+    //                     child: Image.network("${movie_details[0].videoInfo!.posterImage}",fit: BoxFit.fitWidth,)),
+    //                 // cover: sText("${VideoController(source: VideoPlayerController.network(url),autoplay: true,initPosition: Duration(minutes: 9)).positionText}"),
+    //               )
+    //           ),
+    //         ),
+    //         !isComment ?
+    //        Expanded(
+    //          child: ListView(
+    //              children: [
+    //                Column(
+    //                  crossAxisAlignment: CrossAxisAlignment.start,
+    //                  children: [
+    //                    Container(
+    //                      padding: EdgeInsets.only(left: 20,right: 20,top: 10),
+    //                      child: sText("${properCase(movie_details[0].videoInfo!.title!)}",weight: FontWeight.bold),
+    //                    ),
+    //                    Container(
+    //                      padding: EdgeInsets.only(left: 20,right: 20,top: 10),
+    //                      child: sText2("${properCase(movie_details[0].videoInfo!.videoCategoryName!)} . ${properCase(movie_details[0].videoInfo!.genreName!)}",weight: FontWeight.w600,color: Colors.grey),
+    //                    ),
+    //                    GestureDetector(
+    //                      onTap: (){
+    //                        setState(() {
+    //                          if(isMore){
+    //                            isMore = false;
+    //                          }else{
+    //                            isMore = true;
+    //                          }
+    //
+    //                        });
+    //                      },
+    //                      child: Container(
+    //                        width: appWidth(context),
+    //                        padding: EdgeInsets.only(left: 20,right: 20,top: 10),
+    //                        child:   Text.rich(
+    //                          TextSpan(
+    //                              text: '${properCase(isMore ? movie_details[0].videoInfo!.description!.substring(1,10) : movie_details[0].videoInfo!.description!)} ',
+    //                              children: <InlineSpan>[
+    //                                if(movie_details[0].videoInfo!.description!.length > 30)
+    //                                  TextSpan(
+    //                                    text: isMore ? 'Read more' : 'Read less',
+    //                                    style: appStyle(col: dPurple),
+    //
+    //                                  )
+    //                              ]
+    //                          ),
+    //                          maxLines: isMore ? 4 : 10,
+    //
+    //
+    //                        ),
+    //                      ),
+    //                    ),
+    //                    Container(
+    //                      padding: leftPadding(10),
+    //                      child: Row(
+    //                        children: [
+    //                          Container(
+    //                            child: Row(
+    //                              children: [
+    //                                IconButton(onPressed: (){
+    //                                  setState(() {
+    //                                    if(movie_details[0].videoInfo!.isLike! == 1){
+    //                                      final m_details = movie_details[0];
+    //                                      m_details.videoInfo!.likeCount = movie_details[0].videoInfo!.likeCount! - 1;
+    //                                      m_details.videoInfo!.isLike = 0;
+    //                                      movie_details[0] = m_details;
+    //                                    }else{
+    //                                      final m_details = movie_details[0];
+    //                                      m_details.videoInfo!.likeCount = movie_details[0].videoInfo!.likeCount! + 1;
+    //                                      m_details.videoInfo!.isLike = 1;
+    //                                      if(movie_details[0].videoInfo!.isDislike! == 1){
+    //                                        m_details.videoInfo!.dislikeCount = movie_details[0].videoInfo!.dislikeCount! - 1;
+    //                                      }
+    //                                      m_details.videoInfo!.isDislike = 0;
+    //
+    //                                      movie_details[0] = m_details;
+    //                                    }
+    //                                    likeMovie(slug: movie_details[0].videoInfo!.slug!);
+    //
+    //
+    //                                  });
+    //                                }, icon: Icon(Icons.thumb_up,color: movie_details[0].videoInfo!.isLike! == 1 ? dPurple : Colors.grey,)),
+    //                                sText2("${movie_details[0].videoInfo!.likeCount}",color: Colors.white,weight: FontWeight.bold)
+    //                              ],
+    //                            ),
+    //                          ),
+    //                          Container(
+    //                            child: Row(
+    //                              children: [
+    //                                IconButton(onPressed: (){
+    //                                  setState(() {
+    //                                    if(movie_details[0].videoInfo!.isDislike! == 1){
+    //                                      final m_details = movie_details[0];
+    //                                      m_details.videoInfo!.isDislike = 0;
+    //                                      m_details.videoInfo!.dislikeCount = movie_details[0].videoInfo!.dislikeCount! - 1;
+    //                                      movie_details[0] = m_details;
+    //                                    }else{
+    //                                      final m_details = movie_details[0];
+    //                                      if(movie_details[0].videoInfo!.isLike! == 1){
+    //                                        print("hey");
+    //                                        m_details.videoInfo!.likeCount = movie_details[0].videoInfo!.likeCount! - 1;
+    //                                      }
+    //                                      m_details.videoInfo!.isLike = 0;
+    //                                      m_details.videoInfo!.isDislike = 1;
+    //                                      m_details.videoInfo!.dislikeCount = movie_details[0].videoInfo!.dislikeCount! + 1;
+    //
+    //                                      movie_details[0] = m_details;
+    //                                    }
+    //                                    disLikeMovie(slug: movie_details[0].videoInfo!.slug!);
+    //
+    //                                  });
+    //                                }, icon: Icon(Icons.thumb_down,color: movie_details[0].videoInfo!.isDislike! == 1 ? dPurple : Colors.grey,)),
+    //                                sText2("${movie_details[0].videoInfo!.dislikeCount}",color: Colors.white,weight: FontWeight.bold)
+    //                              ],
+    //                            ),
+    //                          ),
+    //                          SizedBox(width: 10,),
+    //                          movie_details[0].videoInfo!.price! == 0 ?
+    //                          GestureDetector(
+    //                            onTap: ()async{
+    //                              _getValuesAndPlay(movie_details[0].videoInfo!.hlsPlaylistUrl!);
+    //                            },
+    //                            child: Container(
+    //                              padding: EdgeInsets.only(left: 5,right: 10,top: 5,bottom: 5),
+    //                              decoration: BoxDecoration(
+    //                                  color: Colors.grey,
+    //                                  borderRadius: BorderRadius.circular(5)
+    //                              ),
+    //                              child: Row(
+    //                                children: [
+    //                                  Icon(Icons.play_arrow,color: Colors.white,),
+    //                                  sText2("Play movie",color: Colors.white,weight: FontWeight.bold)
+    //                                ],
+    //                              ),
+    //                            ),
+    //                          ) :
+    //                          Container(
+    //                            child: sText("RENT \$${movie_details[0].videoInfo!.price}"),
+    //                            padding: appPadding(5),
+    //                            decoration: BoxDecoration(
+    //                                border: Border.all(color: dPurple),
+    //                                borderRadius: BorderRadius.circular(5)
+    //                            ),
+    //                          )
+    //                          ,
+    //                        ],
+    //                      ),
+    //                    ),
+    //                    Container(
+    //                      padding: leftPadding(20),
+    //                      child: Row(
+    //                        children: [
+    //                          Container(
+    //                            child: Row(
+    //                              children: [
+    //                                sText2("Release Date",color: Colors.grey,weight: FontWeight.bold),
+    //                                SizedBox(width: 10,),
+    //                                sText("${DateFormat.MMMEd().format(movie_details[0].videoInfo!.publishedOn!)}",color: Colors.white,weight: FontWeight.bold)
+    //                              ],
+    //                            ),
+    //                          ),
+    //                          SizedBox(width: 20,),
+    //                          Container(
+    //                            child: Row(
+    //                              children: [
+    //                                sText2("Views",color: Colors.grey,weight: FontWeight.bold),
+    //                                SizedBox(width: 5,),
+    //                                sText("${movie_details[0].videoInfo!.viewCount}",color: Colors.white,weight: FontWeight.bold)
+    //                              ],
+    //                            ),
+    //                          ),
+    //                        ],
+    //                      ),
+    //                    ),
+    //                    SizedBox(height: 10,),
+    //                    Container(
+    //                      padding: leftPadding(20),
+    //                      child: Column(
+    //                        crossAxisAlignment: CrossAxisAlignment.start,
+    //                        children: [
+    //                          sText("Starring",color: Colors.white,weight: FontWeight.bold),
+    //                          SizedBox(height: 5,),
+    //                          sText2("${movie_details[0].videoInfo!.presenter == null ? "" : movie_details[0].videoInfo!.presenter}",color: Colors.grey,weight: FontWeight.bold),
+    //
+    //                        ],
+    //                      ),
+    //                    ),
+    //                    Container(
+    //                      padding: EdgeInsets.only(left: 20,right: 20),
+    //                      child: Divider(color: Colors.grey[200],),
+    //                    ),
+    //                    Container(
+    //                      padding: EdgeInsets.only(left: 20,right: 20),
+    //                      child: Row(
+    //                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //                        children: [
+    //                          movie_details[0].videoInfo!.isFavourite! == 1 ?
+    //                          GestureDetector(
+    //                            onTap: (){
+    //                              setState(() {
+    //                                final m_details = movie_details[0];
+    //                                m_details.videoInfo!.isFavourite = 0;
+    //                                movie_details[0] = m_details;
+    //
+    //                              });
+    //                              removeMovieFromFavourite(slug: movie_details[0].videoInfo!.slug!);
+    //                            },
+    //                            child: Container(
+    //                              child: Column(
+    //                                children: [
+    //                                  Icon(Icons.favorite,color: dPurple,),
+    //                                  sText2("Favourite",color: Colors.grey)
+    //                                ],
+    //                              ),
+    //                            ),
+    //                          ) :
+    //                          GestureDetector(
+    //                            onTap: (){
+    //                              setState(() {
+    //                                final m_details = movie_details[0];
+    //                                m_details.videoInfo!.isFavourite = 1;
+    //                                movie_details[0] = m_details;
+    //                              });
+    //                              addMovieToFavourite(slug: movie_details[0].videoInfo!.slug!);
+    //                            },
+    //                            child: Container(
+    //                              child: Column(
+    //                                children: [
+    //                                  Icon(Icons.favorite,color: Colors.grey,),
+    //                                  sText2("Favourite",color: Colors.grey)
+    //                                ],
+    //                              ),
+    //                            ),
+    //                          ),
+    //                          GestureDetector(
+    //                            onTap: (){
+    //                              _onShareData(context);
+    //                            },
+    //                            child: Container(
+    //                              child: Column(
+    //                                children: [
+    //                                  Icon(Icons.share,color: Colors.grey,),
+    //                                  sText2("Share",color: Colors.grey)
+    //                                ],
+    //                              ),
+    //                            ),
+    //                          ),
+    //                          GestureDetector(
+    //                            onTap: (){
+    //                              goTo(context, ListPlaylist(responseScreens: responseScreenUser[0],slug: movie_details[0].videoInfo!.slug!,));
+    //                            },
+    //                            child: Container(
+    //                              child: Column(
+    //                                children: [
+    //                                  Icon(Icons.playlist_add,color: Colors.grey,),
+    //                                  sText2("Playlist",color: Colors.grey)
+    //                                ],
+    //                              ),
+    //                            ),
+    //                          ),
+    //                          GestureDetector(
+    //                            onTap: (){
+    //                              downloadFile();
+    //                            },
+    //                            child: Container(
+    //                              child: Column(
+    //                                children: [
+    //                                  Row(
+    //                                    children: [
+    //                                      Icon(Icons.download,color: Colors.grey,),
+    //                                      loading ? progress(size: 5) : Container()
+    //                                    ],
+    //                                  ),
+    //                                  sText2("Download",color: Colors.grey)
+    //                                ],
+    //                              ),
+    //                            ),
+    //                          ),
+    //                          GestureDetector(
+    //                            onTap: (){
+    //                              setState(() {
+    //                                isComment = true;
+    //                              });
+    //                            },
+    //                            child: Container(
+    //                              child: Column(
+    //                                children: [
+    //                                  Icon(Icons.comment,color: Colors.grey,),
+    //                                  sText2("Comment",color: Colors.grey)
+    //                                ],
+    //                              ),
+    //                            ),
+    //                          ),
+    //                        ],
+    //                      ),
+    //                    ),
+    //
+    //                    Container(
+    //                      padding: EdgeInsets.only(left: 20,right: 20),
+    //                      child: Divider(color: Colors.grey[200],),
+    //                    ),
+    //                    SizedBox(height: 5,),
+    //                    Container(
+    //                      margin: leftPadding(10),
+    //                      child: Column(
+    //                        crossAxisAlignment: CrossAxisAlignment.start,
+    //                        children: [
+    //                          Container(
+    //                            margin: leftPadding(10),
+    //                            child: sText("Related Videos",weight: FontWeight.bold),
+    //                          ),
+    //                          SizedBox(height: 15,),
+    //                          Container(
+    //                            height: 150,
+    //                            margin: leftPadding(5),
+    //                            child: ListView.builder(
+    //                                itemCount: movie_details[0].related!.data!.length,
+    //                                shrinkWrap: true,
+    //                                physics: ClampingScrollPhysics(),
+    //                                scrollDirection: Axis.horizontal,
+    //                                itemBuilder: (BuildContext context, int index){
+    //                                  return  GestureDetector(
+    //                                    onTap: (){
+    //                                      vcs!.pause();
+    //                                      goTo(context, MoviePage(slug: movie_details[0].related!.data![index].slug!,title: movie_details[0].related!.data![index].title!,));
+    //
+    //                                    },
+    //                                    child: Row(
+    //                                      children: [
+    //                                        SizedBox(width: 5,),
+    //                                        Stack(
+    //                                          children: [
+    //                                            ClipRRect(
+    //                                              borderRadius: BorderRadius.circular(5.0),
+    //                                              child: Container(
+    //                                                height: 150,
+    //                                                child: displayImage("${movie_details[0].related!.data![index].thumbnailImage}",width: 100,radius: 0),
+    //                                              ),
+    //                                            ),
+    //                                            Positioned(
+    //                                              right: 0,
+    //                                              child: Container(
+    //                                                  padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),
+    //                                                  decoration: BoxDecoration(
+    //                                                      color: Colors.black26,
+    //                                                      borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
+    //                                                  ),
+    //                                                  child: popUpMenu(movieId: movie_details[0].related!.data![index].slug!,context: context)
+    //                                              ),
+    //                                            )
+    //                                          ],
+    //                                        ),
+    //                                      ],
+    //                                    ),
+    //                                  );
+    //                                }),
+    //                          ),
+    //                        ],
+    //                      ),
+    //                    )
+    //                  ],
+    //                )
+    //              ],
+    //          ),
+    //        )
+    //             :
+    //         loadCommentReplies()
+    //       ],
+    //     ) :  Column(
+    //       children: [
+    //         Expanded(child: Center(child: progress(),)),
+    //       ],
+    //     ),
+    //   ),
+    // );
   }
 }
+
+
+// class VideoPlayerApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'Video Player Demo',
+//       home: Container(
+//           padding: EdgeInsets.all(100),
+//           color: Colors.black,
+//           child: VideoPlayerScreen()),
+//     );
+//   }
+// }
+//
+// class VideoPlayerScreen extends StatefulWidget {
+//   VideoPlayerScreen({Key key}) : super(key: key);
+//
+//   @override
+//   _VideoPlayerScreenState createState() => _VideoPlayerScreenState();
+// }
+//
+// class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+//   VideoPlayerController _controller;
+//   Future<void> _initializeVideoPlayerFuture;
+//   int _playBackTime;
+//
+//   //The values that are passed when changing quality
+//   Duration newCurrentPosition;
+//
+//   String defaultStream =
+//       'https://archive.org/download/Damas_BB_28F8B535_D_406/DaMaS.mp4';
+//   String stream2 = 'https://archive.org/download/cCloud_20151126/cCloud.mp4';
+//   String stream3 = 'https://archive.org/download/mblbhs/mblbhs.mp4';
+//
+//   @override
+//   void initState() {
+//     _controller = VideoPlayerController.network(defaultStream);
+//     _controller.addListener(() {
+//       setState(() {
+//         _playBackTime = _controller.value.position.inSeconds;
+//       });
+//     });
+//     _initializeVideoPlayerFuture = _controller.initialize();
+//     super.initState();
+//   }
+//
+//   @override
+//   void dispose() {
+//     _initializeVideoPlayerFuture = null;
+//     _controller?.pause()?.then((_) {
+//       _controller.dispose();
+//     });
+//     super.dispose();
+//   }
+//
+//   Future<bool> _clearPrevious() async {
+//     await _controller?.pause();
+//     return true;
+//   }
+//
+//   Future<void> _initializePlay(String videoPath) async {
+//     _controller = VideoPlayerController.network(videoPath);
+//     _controller.addListener(() {
+//       setState(() {
+//         _playBackTime = _controller.value.position.inSeconds;
+//       });
+//     });
+//     _initializeVideoPlayerFuture = _controller.initialize().then((_) {
+//       _controller.seekTo(newCurrentPosition);
+//       _controller.play();
+//     });
+//   }
+//
+//   void _getValuesAndPlay(String videoPath) {
+//     newCurrentPosition = _controller.value.position;
+//     _startPlay(videoPath);
+//     print(newCurrentPosition.toString());
+//   }
+//
+//   Future<void> _startPlay(String videoPath) async {
+//     setState(() {
+//       _initializeVideoPlayerFuture = null;
+//     });
+//     Future.delayed(const Duration(milliseconds: 200), () {
+//       _clearPrevious().then((_) {
+//         _initializePlay(videoPath);
+//       });
+//     });
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return FutureBuilder(
+//       future: _initializeVideoPlayerFuture,
+//       builder: (context, snapshot) {
+//         if (snapshot.connectionState == ConnectionState.done) {
+//           return Container(
+//             width: appWidth(context),
+//             child:   movie_details.isNotEmpty ?
+//             Column(
+//               children: [
+//                 Padding(
+//                   padding: const EdgeInsets.only(top: 12.0),
+//                   child: AspectRatio(
+//                       aspectRatio: 16 / 9,
+//                       child: VideoBox(
+//                         customLoadingWidget: Container(),
+//                         // customLoadingWidget: Center(child: progress()),
+//                         controller: _controller!,
+//                         background: Container(
+//                             width: appWidth(context),
+//                             child: Image.network("${movie_details[0].videoInfo!.posterImage}",fit: BoxFit.fitWidth,)),
+//                         // cover: sText("${VideoController(source: VideoPlayerController.network(url),autoplay: true,initPosition: Duration(minutes: 9)).positionText}"),
+//                       )
+//                   ),
+//                 ),
+//                 !isComment ?
+//                 Expanded(
+//                   child: ListView(
+//                     children: [
+//                       Column(
+//                         crossAxisAlignment: CrossAxisAlignment.start,
+//                         children: [
+//                           Container(
+//                             padding: EdgeInsets.only(left: 20,right: 20,top: 10),
+//                             child: sText("${properCase(movie_details[0].videoInfo!.title!)}",weight: FontWeight.bold),
+//                           ),
+//                           Container(
+//                             padding: EdgeInsets.only(left: 20,right: 20,top: 10),
+//                             child: sText2("${properCase(movie_details[0].videoInfo!.videoCategoryName!)} . ${properCase(movie_details[0].videoInfo!.genreName!)}",weight: FontWeight.w600,color: Colors.grey),
+//                           ),
+//                           GestureDetector(
+//                             onTap: (){
+//                               setState(() {
+//                                 if(isMore){
+//                                   isMore = false;
+//                                 }else{
+//                                   isMore = true;
+//                                 }
+//
+//                               });
+//                             },
+//                             child: Container(
+//                               width: appWidth(context),
+//                               padding: EdgeInsets.only(left: 20,right: 20,top: 10),
+//                               child:   Text.rich(
+//                                 TextSpan(
+//                                     text: '${properCase(isMore ? movie_details[0].videoInfo!.description!.substring(1,10) : movie_details[0].videoInfo!.description!)} ',
+//                                     children: <InlineSpan>[
+//                                       if(movie_details[0].videoInfo!.description!.length > 30)
+//                                         TextSpan(
+//                                           text: isMore ? 'Read more' : 'Read less',
+//                                           style: appStyle(col: dPurple),
+//
+//                                         )
+//                                     ]
+//                                 ),
+//                                 maxLines: isMore ? 4 : 10,
+//
+//
+//                               ),
+//                             ),
+//                           ),
+//                           Container(
+//                             padding: leftPadding(10),
+//                             child: Row(
+//                               children: [
+//                                 Container(
+//                                   child: Row(
+//                                     children: [
+//                                       IconButton(onPressed: (){
+//                                         setState(() {
+//                                           if(movie_details[0].videoInfo!.isLike! == 1){
+//                                             final m_details = movie_details[0];
+//                                             m_details.videoInfo!.likeCount = movie_details[0].videoInfo!.likeCount! - 1;
+//                                             m_details.videoInfo!.isLike = 0;
+//                                             movie_details[0] = m_details;
+//                                           }else{
+//                                             final m_details = movie_details[0];
+//                                             m_details.videoInfo!.likeCount = movie_details[0].videoInfo!.likeCount! + 1;
+//                                             m_details.videoInfo!.isLike = 1;
+//                                             if(movie_details[0].videoInfo!.isDislike! == 1){
+//                                               m_details.videoInfo!.dislikeCount = movie_details[0].videoInfo!.dislikeCount! - 1;
+//                                             }
+//                                             m_details.videoInfo!.isDislike = 0;
+//
+//                                             movie_details[0] = m_details;
+//                                           }
+//                                           likeMovie(slug: movie_details[0].videoInfo!.slug!);
+//
+//
+//                                         });
+//                                       }, icon: Icon(Icons.thumb_up,color: movie_details[0].videoInfo!.isLike! == 1 ? dPurple : Colors.grey,)),
+//                                       sText2("${movie_details[0].videoInfo!.likeCount}",color: Colors.white,weight: FontWeight.bold)
+//                                     ],
+//                                   ),
+//                                 ),
+//                                 Container(
+//                                   child: Row(
+//                                     children: [
+//                                       IconButton(onPressed: (){
+//                                         setState(() {
+//                                           if(movie_details[0].videoInfo!.isDislike! == 1){
+//                                             final m_details = movie_details[0];
+//                                             m_details.videoInfo!.isDislike = 0;
+//                                             m_details.videoInfo!.dislikeCount = movie_details[0].videoInfo!.dislikeCount! - 1;
+//                                             movie_details[0] = m_details;
+//                                           }else{
+//                                             final m_details = movie_details[0];
+//                                             if(movie_details[0].videoInfo!.isLike! == 1){
+//                                               print("hey");
+//                                               m_details.videoInfo!.likeCount = movie_details[0].videoInfo!.likeCount! - 1;
+//                                             }
+//                                             m_details.videoInfo!.isLike = 0;
+//                                             m_details.videoInfo!.isDislike = 1;
+//                                             m_details.videoInfo!.dislikeCount = movie_details[0].videoInfo!.dislikeCount! + 1;
+//
+//                                             movie_details[0] = m_details;
+//                                           }
+//                                           disLikeMovie(slug: movie_details[0].videoInfo!.slug!);
+//
+//                                         });
+//                                       }, icon: Icon(Icons.thumb_down,color: movie_details[0].videoInfo!.isDislike! == 1 ? dPurple : Colors.grey,)),
+//                                       sText2("${movie_details[0].videoInfo!.dislikeCount}",color: Colors.white,weight: FontWeight.bold)
+//                                     ],
+//                                   ),
+//                                 ),
+//                                 SizedBox(width: 10,),
+//                                 movie_details[0].videoInfo!.price! == 0 ?
+//                                 GestureDetector(
+//                                   onTap: ()async{
+//                                     _getValuesAndPlay(movie_details[0].videoInfo!.hlsPlaylistUrl!);
+//                                   },
+//                                   child: Container(
+//                                     padding: EdgeInsets.only(left: 5,right: 10,top: 5,bottom: 5),
+//                                     decoration: BoxDecoration(
+//                                         color: Colors.grey,
+//                                         borderRadius: BorderRadius.circular(5)
+//                                     ),
+//                                     child: Row(
+//                                       children: [
+//                                         Icon(Icons.play_arrow,color: Colors.white,),
+//                                         sText2("Play movie",color: Colors.white,weight: FontWeight.bold)
+//                                       ],
+//                                     ),
+//                                   ),
+//                                 ) :
+//                                 Container(
+//                                   child: sText("RENT \$${movie_details[0].videoInfo!.price}"),
+//                                   padding: appPadding(5),
+//                                   decoration: BoxDecoration(
+//                                       border: Border.all(color: dPurple),
+//                                       borderRadius: BorderRadius.circular(5)
+//                                   ),
+//                                 )
+//                                 ,
+//                               ],
+//                             ),
+//                           ),
+//                           Container(
+//                             padding: leftPadding(20),
+//                             child: Row(
+//                               children: [
+//                                 Container(
+//                                   child: Row(
+//                                     children: [
+//                                       sText2("Release Date",color: Colors.grey,weight: FontWeight.bold),
+//                                       SizedBox(width: 10,),
+//                                       sText("${DateFormat.MMMEd().format(movie_details[0].videoInfo!.publishedOn!)}",color: Colors.white,weight: FontWeight.bold)
+//                                     ],
+//                                   ),
+//                                 ),
+//                                 SizedBox(width: 20,),
+//                                 Container(
+//                                   child: Row(
+//                                     children: [
+//                                       sText2("Views",color: Colors.grey,weight: FontWeight.bold),
+//                                       SizedBox(width: 5,),
+//                                       sText("${movie_details[0].videoInfo!.viewCount}",color: Colors.white,weight: FontWeight.bold)
+//                                     ],
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           ),
+//                           SizedBox(height: 10,),
+//                           Container(
+//                             padding: leftPadding(20),
+//                             child: Column(
+//                               crossAxisAlignment: CrossAxisAlignment.start,
+//                               children: [
+//                                 sText("Starring",color: Colors.white,weight: FontWeight.bold),
+//                                 SizedBox(height: 5,),
+//                                 sText2("${movie_details[0].videoInfo!.presenter == null ? "" : movie_details[0].videoInfo!.presenter}",color: Colors.grey,weight: FontWeight.bold),
+//
+//                               ],
+//                             ),
+//                           ),
+//                           Container(
+//                             padding: EdgeInsets.only(left: 20,right: 20),
+//                             child: Divider(color: Colors.grey[200],),
+//                           ),
+//                           Container(
+//                             padding: EdgeInsets.only(left: 20,right: 20),
+//                             child: Row(
+//                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                               children: [
+//                                 movie_details[0].videoInfo!.isFavourite! == 1 ?
+//                                 GestureDetector(
+//                                   onTap: (){
+//                                     setState(() {
+//                                       final m_details = movie_details[0];
+//                                       m_details.videoInfo!.isFavourite = 0;
+//                                       movie_details[0] = m_details;
+//
+//                                     });
+//                                     removeMovieFromFavourite(slug: movie_details[0].videoInfo!.slug!);
+//                                   },
+//                                   child: Container(
+//                                     child: Column(
+//                                       children: [
+//                                         Icon(Icons.favorite,color: dPurple,),
+//                                         sText2("Favourite",color: Colors.grey)
+//                                       ],
+//                                     ),
+//                                   ),
+//                                 ) :
+//                                 GestureDetector(
+//                                   onTap: (){
+//                                     setState(() {
+//                                       final m_details = movie_details[0];
+//                                       m_details.videoInfo!.isFavourite = 1;
+//                                       movie_details[0] = m_details;
+//                                     });
+//                                     addMovieToFavourite(slug: movie_details[0].videoInfo!.slug!);
+//                                   },
+//                                   child: Container(
+//                                     child: Column(
+//                                       children: [
+//                                         Icon(Icons.favorite,color: Colors.grey,),
+//                                         sText2("Favourite",color: Colors.grey)
+//                                       ],
+//                                     ),
+//                                   ),
+//                                 ),
+//                                 GestureDetector(
+//                                   onTap: (){
+//                                     _onShareData(context);
+//                                   },
+//                                   child: Container(
+//                                     child: Column(
+//                                       children: [
+//                                         Icon(Icons.share,color: Colors.grey,),
+//                                         sText2("Share",color: Colors.grey)
+//                                       ],
+//                                     ),
+//                                   ),
+//                                 ),
+//                                 GestureDetector(
+//                                   onTap: (){
+//                                     goTo(context, ListPlaylist(responseScreens: responseScreenUser[0],slug: movie_details[0].videoInfo!.slug!,));
+//                                   },
+//                                   child: Container(
+//                                     child: Column(
+//                                       children: [
+//                                         Icon(Icons.playlist_add,color: Colors.grey,),
+//                                         sText2("Playlist",color: Colors.grey)
+//                                       ],
+//                                     ),
+//                                   ),
+//                                 ),
+//                                 GestureDetector(
+//                                   onTap: (){
+//                                     downloadFile();
+//                                   },
+//                                   child: Container(
+//                                     child: Column(
+//                                       children: [
+//                                         Row(
+//                                           children: [
+//                                             Icon(Icons.download,color: Colors.grey,),
+//                                             loading ? progress(size: 5) : Container()
+//                                           ],
+//                                         ),
+//                                         sText2("Download",color: Colors.grey)
+//                                       ],
+//                                     ),
+//                                   ),
+//                                 ),
+//                                 GestureDetector(
+//                                   onTap: (){
+//                                     setState(() {
+//                                       isComment = true;
+//                                     });
+//                                   },
+//                                   child: Container(
+//                                     child: Column(
+//                                       children: [
+//                                         Icon(Icons.comment,color: Colors.grey,),
+//                                         sText2("Comment",color: Colors.grey)
+//                                       ],
+//                                     ),
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           ),
+//
+//                           Container(
+//                             padding: EdgeInsets.only(left: 20,right: 20),
+//                             child: Divider(color: Colors.grey[200],),
+//                           ),
+//                           SizedBox(height: 5,),
+//                           Container(
+//                             margin: leftPadding(10),
+//                             child: Column(
+//                               crossAxisAlignment: CrossAxisAlignment.start,
+//                               children: [
+//                                 Container(
+//                                   margin: leftPadding(10),
+//                                   child: sText("Related Videos",weight: FontWeight.bold),
+//                                 ),
+//                                 SizedBox(height: 15,),
+//                                 Container(
+//                                   height: 150,
+//                                   margin: leftPadding(5),
+//                                   child: ListView.builder(
+//                                       itemCount: movie_details[0].related!.data!.length,
+//                                       shrinkWrap: true,
+//                                       physics: ClampingScrollPhysics(),
+//                                       scrollDirection: Axis.horizontal,
+//                                       itemBuilder: (BuildContext context, int index){
+//                                         return  GestureDetector(
+//                                           onTap: (){
+//                                             vcs!.pause();
+//                                             goTo(context, MoviePage(slug: movie_details[0].related!.data![index].slug!,title: movie_details[0].related!.data![index].title!,));
+//
+//                                           },
+//                                           child: Row(
+//                                             children: [
+//                                               SizedBox(width: 5,),
+//                                               Stack(
+//                                                 children: [
+//                                                   ClipRRect(
+//                                                     borderRadius: BorderRadius.circular(5.0),
+//                                                     child: Container(
+//                                                       height: 150,
+//                                                       child: displayImage("${movie_details[0].related!.data![index].thumbnailImage}",width: 100,radius: 0),
+//                                                     ),
+//                                                   ),
+//                                                   Positioned(
+//                                                     right: 0,
+//                                                     child: Container(
+//                                                         padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),
+//                                                         decoration: BoxDecoration(
+//                                                             color: Colors.black26,
+//                                                             borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
+//                                                         ),
+//                                                         child: popUpMenu(movieId: movie_details[0].related!.data![index].slug!,context: context)
+//                                                     ),
+//                                                   )
+//                                                 ],
+//                                               ),
+//                                             ],
+//                                           ),
+//                                         );
+//                                       }),
+//                                 ),
+//                               ],
+//                             ),
+//                           )
+//                         ],
+//                       )
+//                     ],
+//                   ),
+//                 )
+//                     :
+//                 loadCommentReplies()
+//               ],
+//             ) :  Column(
+//               children: [
+//                 Expanded(child: Center(child: progress(),)),
+//               ],
+//             ),
+//           );
+//         } else {
+//           // If the VideoPlayerController is still initializing, show a
+//           // loading spinner.
+//           return Center(child: CircularProgressIndicator());
+//         }
+//       },
+//     );
+//   }
+// }
+
 

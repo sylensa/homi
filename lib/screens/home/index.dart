@@ -146,7 +146,7 @@ class _HomePageState extends State<HomePage> {
                           controller:vcs[index],
                           background: GestureDetector(
                             onTap: (){
-                              print("hello");
+                              print("hello:${listBannerData[0].data[index].title}");
                               goTo(context, MoviePage(slug: listBannerData[0].data[index].slug,title: listBannerData[0].data[index].title,));
                             },
                             child: Container(
@@ -269,6 +269,7 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (BuildContext context, int index){
                             return  GestureDetector(
                               onTap: (){
+                                print("hello:${listNewData[0].data[index].title}");
                                 goTo(context, MoviePage(slug: listNewData[0].data[index].slug,title: listNewData[0].data[index].title,));
                               },
                               child: Row(
@@ -324,7 +325,7 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (BuildContext context, int index){
                             return  GestureDetector(
                               onTap: (){
-                                goTo(context, MoviePage(slug: listHomeContent[0].data[index].slug,title: listHomeContent[0].data[index].title,));
+                                goTo(context, MoviePage(slug: listHomeContent[i].data[index].slug,title: listHomeContent[i].data[index].title,));
                               },
                               child: Row(
                                 children: [
@@ -346,7 +347,7 @@ class _HomePageState extends State<HomePage> {
                                               color: Colors.black12,
                                               borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
                                             ),
-                                            child: popUpMenu(movieId: listHomeContent[0].data[index].slug,context: context)
+                                            child: popUpMenu(movieId: listHomeContent[i].data[index].slug,context: context)
                                         ),
                                       )
                                     ],
