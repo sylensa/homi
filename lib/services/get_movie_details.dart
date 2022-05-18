@@ -535,7 +535,7 @@ class VideoInfo {
   int? dislikeCount;
   int? autoPlay;
   dynamic seasonName;
-  int? seasonId;
+  dynamic seasonId;
   Subtitle? subtitle;
   String? passphrase;
   String? spriteImage;
