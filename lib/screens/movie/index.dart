@@ -762,7 +762,7 @@ class _MoviePageState extends State<MoviePage> {
                                         text: '${properCase(
                                             isMore
                                                 ? movie_details[0].videoInfo!
-                                                .description!.substring(1, 10)
+                                                .description!.substring(0, 10)
                                                 : movie_details[0].videoInfo!
                                                 .description!)} ',
                                         children: <InlineSpan>[
