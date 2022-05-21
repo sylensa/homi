@@ -31,6 +31,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: lightThemeData,
+
       darkTheme:  isDarkModeEnabledLocal ? darkThemeData : lightThemeData,
       themeMode: EasyDynamicTheme.of(context).themeMode,
       onGenerateRoute: (settings){

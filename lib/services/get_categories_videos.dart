@@ -201,7 +201,7 @@ class VideoData {
   factory VideoData.fromJson(Map<String, dynamic> json) => VideoData(
       title: json["title"] ?? "",
       slug: json["slug"] ?? "",
-      thumbnailImage: json["thumbnail_image"],
+      thumbnailImage: json["thumbnail_image"] ?? "",
       posterImage: json["poster_image"] ?? "",
       isFavourite: json["is_favourite"] ?? 0,
       isLive: json["is_live"] ?? 0,

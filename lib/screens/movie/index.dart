@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:homi/helper/helper.dart';
 import 'package:homi/pages/list_playlist.dart';
+import 'package:homi/screens/login/index.dart';
+import 'package:homi/screens/premium/index.dart';
 import 'package:homi/services/get_homepage_banner.dart';
 import 'package:homi/services/get_movie_details.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
@@ -64,11 +66,28 @@ class _MoviePageState extends State<MoviePage> {
   Future<void>? _initializeVideoPlayerFuture;
   int? _playBackTime;
 
+  checkIfLogin(){
+    if(responseScreenUser.isNotEmpty){
+      if(responseUserData[0].isSubscribed == 1){
+        setState(() {
+          isPlay = true;
+        });
+      return true;
+      }else{
+        goTo(context, PremiumPage());
+      }
+    }else{
+      showDialogOk(message: "You've to login to access this feature",context: context,target: LoginPage(),replace: false,status: true);
+    }
+
+    return false;
+  }
+
   //The values that are passed when changing quality
   Duration? newCurrentPosition;
 
   getMovieDetails()async{
-    // try{
+    try{
     var js = await doPost('medias/api/v2/videos/${widget.slug}',{"screen":responseScreenUser.isNotEmpty ? responseScreenUser[0].id : ""});
     print("res timeline: $js");
     if(js["status"] == 'success'){
@@ -88,10 +107,10 @@ class _MoviePageState extends State<MoviePage> {
     }
 
 
-    // }catch(e){
-    //   print("error timeline: $e");
-    //   toast("$e, try again");
-    // }
+    }catch(e){
+      print("error timeline: $e");
+      toast("$e, try again");
+    }
 
   }
   Future<bool> _requestPermission(Permission permission) async {
@@ -791,36 +810,40 @@ class _MoviePageState extends State<MoviePage> {
                                       child: Row(
                                         children: [
                                           IconButton(onPressed: () {
-                                            setState(() {
-                                              if (movie_details[0].videoInfo!
-                                                  .isLike! == 1) {
-                                                final m_details = movie_details[0];
-                                                m_details.videoInfo!.likeCount =
-                                                    movie_details[0].videoInfo!
-                                                        .likeCount! - 1;
-                                                m_details.videoInfo!.isLike = 0;
-                                                movie_details[0] = m_details;
-                                              } else {
-                                                final m_details = movie_details[0];
-                                                m_details.videoInfo!.likeCount =
-                                                    movie_details[0].videoInfo!
-                                                        .likeCount! + 1;
-                                                m_details.videoInfo!.isLike = 1;
-                                                if (movie_details[0].videoInfo!
-                                                    .isDislike! == 1) {
-                                                  m_details.videoInfo!
-                                                      .dislikeCount =
-                                                      movie_details[0].videoInfo!
-                                                          .dislikeCount! - 1;
-                                                }
-                                                m_details.videoInfo!.isDislike = 0;
+                                           if(checkIfLogin()){
+                                             setState(() {
+                                               if (movie_details[0].videoInfo!
+                                                   .isLike! == 1) {
+                                                 final m_details = movie_details[0];
+                                                 m_details.videoInfo!.likeCount =
+                                                     movie_details[0].videoInfo!
+                                                         .likeCount! - 1;
+                                                 m_details.videoInfo!.isLike = 0;
+                                                 movie_details[0] = m_details;
+                                               }
+                                               else {
+                                                 final m_details = movie_details[0];
+                                                 m_details.videoInfo!.likeCount =
+                                                     movie_details[0].videoInfo!
+                                                         .likeCount! + 1;
+                                                 m_details.videoInfo!.isLike = 1;
+                                                 if (movie_details[0].videoInfo!
+                                                     .isDislike! == 1) {
+                                                   m_details.videoInfo!
+                                                       .dislikeCount =
+                                                       movie_details[0].videoInfo!
+                                                           .dislikeCount! - 1;
+                                                 }
+                                                 m_details.videoInfo!.isDislike = 0;
 
-                                                movie_details[0] = m_details;
-                                              }
-                                              likeMovie(
-                                                  slug: movie_details[0].videoInfo!
-                                                      .slug!);
-                                            });
+                                                 movie_details[0] = m_details;
+                                               }
+                                               likeMovie(
+                                                   slug: movie_details[0].videoInfo!
+                                                       .slug!);
+                                             });
+                                           }
+
                                           },
                                               icon: Icon(Icons.thumb_up,
                                                 color: movie_details[0].videoInfo!
@@ -836,36 +859,40 @@ class _MoviePageState extends State<MoviePage> {
                                       child: Row(
                                         children: [
                                           IconButton(onPressed: () {
-                                            setState(() {
-                                              if (movie_details[0].videoInfo!
-                                                  .isDislike! == 1) {
-                                                final m_details = movie_details[0];
-                                                m_details.videoInfo!.isDislike = 0;
-                                                m_details.videoInfo!.dislikeCount =
-                                                    movie_details[0].videoInfo!
-                                                        .dislikeCount! - 1;
-                                                movie_details[0] = m_details;
-                                              } else {
-                                                final m_details = movie_details[0];
+                                            if(checkIfLogin()){
+                                              setState(() {
                                                 if (movie_details[0].videoInfo!
-                                                    .isLike! == 1) {
-                                                  print("hey");
-                                                  m_details.videoInfo!.likeCount =
+                                                    .isDislike! == 1) {
+                                                  final m_details = movie_details[0];
+                                                  m_details.videoInfo!.isDislike = 0;
+                                                  m_details.videoInfo!.dislikeCount =
                                                       movie_details[0].videoInfo!
-                                                          .likeCount! - 1;
+                                                          .dislikeCount! - 1;
+                                                  movie_details[0] = m_details;
                                                 }
-                                                m_details.videoInfo!.isLike = 0;
-                                                m_details.videoInfo!.isDislike = 1;
-                                                m_details.videoInfo!.dislikeCount =
-                                                    movie_details[0].videoInfo!
-                                                        .dislikeCount! + 1;
+                                                else {
+                                                  final m_details = movie_details[0];
+                                                  if (movie_details[0].videoInfo!
+                                                      .isLike! == 1) {
+                                                    print("hey");
+                                                    m_details.videoInfo!.likeCount =
+                                                        movie_details[0].videoInfo!
+                                                            .likeCount! - 1;
+                                                  }
+                                                  m_details.videoInfo!.isLike = 0;
+                                                  m_details.videoInfo!.isDislike = 1;
+                                                  m_details.videoInfo!.dislikeCount =
+                                                      movie_details[0].videoInfo!
+                                                          .dislikeCount! + 1;
 
-                                                movie_details[0] = m_details;
-                                              }
-                                              disLikeMovie(
-                                                  slug: movie_details[0].videoInfo!
-                                                      .slug!);
-                                            });
+                                                  movie_details[0] = m_details;
+                                                }
+                                                disLikeMovie(
+                                                    slug: movie_details[0].videoInfo!
+                                                        .slug!);
+                                              });
+                                            }
+
                                           },
                                               icon: Icon(Icons.thumb_down,
                                                 color: movie_details[0].videoInfo!
@@ -882,12 +909,23 @@ class _MoviePageState extends State<MoviePage> {
                                     movie_details[0].videoInfo!.price! == 0 ?
                                     GestureDetector(
                                       onTap: () async {
-                                        setState(() {
-                                          isPlay = true;
-                                        });
-                                        _getValuesAndPlay(
-                                            movie_details[0].videoInfo!
-                                                .hlsPlaylistUrl!);
+                                        // if(responseScreenUser.isNotEmpty){
+                                        //   if(responseUserData[0].isSubscribed == 1){
+                                        //     setState(() {
+                                        //       isPlay = true;
+                                        //     });
+                                        //     _getValuesAndPlay(movie_details[0].videoInfo!.hlsPlaylistUrl!);
+                                        //   }else{
+                                        //     goTo(context, PremiumPage());
+                                        //   }
+                                        // }else{
+                                        //   showDialogOk(message: "You've to login to access this feature",context: context,target: LoginPage(),replace: false,status: true);
+                                        //   goTo(context, LoginPage());
+                                        // }
+                                        if( checkIfLogin()){
+                                          _getValuesAndPlay(movie_details[0].videoInfo!.hlsPlaylistUrl!);
+                                        }
+                                       ;
                                       },
                                       child: Container(
                                         padding: EdgeInsets.only(
@@ -909,14 +947,31 @@ class _MoviePageState extends State<MoviePage> {
                                         ),
                                       ),
                                     ) :
-                                    Container(
-                                      child: sText(
-                                          "RENT \$${movie_details[0].videoInfo!
-                                              .price}"),
-                                      padding: appPadding(5),
-                                      decoration: BoxDecoration(
-                                          border: Border.all(color: dPurple),
-                                          borderRadius: BorderRadius.circular(5)
+                                    GestureDetector(
+                                      onTap: (){
+                                        if(responseScreenUser.isNotEmpty){
+                                          if(movie_details[0].videoInfo!.isPremium == 1){
+                                            setState(() {
+                                              isPlay = true;
+                                            });
+                                            _getValuesAndPlay(movie_details[0].videoInfo!.hlsPlaylistUrl!);
+                                          }else{
+                                            // go premium
+                                          }
+                                        }else{
+                                          showDialogOk(message: "You've to login to access this feature",context: context,target: LoginPage(),replace: false,status: true);
+                                          goTo(context, LoginPage());
+                                        }
+                                      },
+                                      child: Container(
+                                        child: sText(
+                                            "${movie_details[0].videoInfo!.isPremium == 1 ? "Play Movie" :  "RENT \$${movie_details[0].videoInfo!
+                                                .price}"} "),
+                                        padding: appPadding(5),
+                                        decoration: BoxDecoration(
+                                            border: Border.all(color: dPurple),
+                                            borderRadius: BorderRadius.circular(5)
+                                        ),
                                       ),
                                     )
                                     ,
@@ -987,14 +1042,17 @@ class _MoviePageState extends State<MoviePage> {
                                     movie_details[0].videoInfo!.isFavourite! == 1 ?
                                     GestureDetector(
                                       onTap: () {
-                                        setState(() {
-                                          final m_details = movie_details[0];
-                                          m_details.videoInfo!.isFavourite = 0;
-                                          movie_details[0] = m_details;
-                                        });
-                                        removeMovieFromFavourite(
-                                            slug: movie_details[0].videoInfo!
-                                                .slug!);
+                                        if(checkIfLogin()){
+                                          setState(() {
+                                            final m_details = movie_details[0];
+                                            m_details.videoInfo!.isFavourite = 0;
+                                            movie_details[0] = m_details;
+                                          });
+                                          removeMovieFromFavourite(
+                                              slug: movie_details[0].videoInfo!
+                                                  .slug!);
+                                        }
+
                                       },
                                       child: Container(
                                         child: Column(
@@ -1007,14 +1065,17 @@ class _MoviePageState extends State<MoviePage> {
                                     ) :
                                     GestureDetector(
                                       onTap: () {
-                                        setState(() {
-                                          final m_details = movie_details[0];
-                                          m_details.videoInfo!.isFavourite = 1;
-                                          movie_details[0] = m_details;
-                                        });
-                                        addMovieToFavourite(
-                                            slug: movie_details[0].videoInfo!
-                                                .slug!);
+                                        if(checkIfLogin()){
+                                          setState(() {
+                                            final m_details = movie_details[0];
+                                            m_details.videoInfo!.isFavourite = 1;
+                                            movie_details[0] = m_details;
+                                          });
+                                          addMovieToFavourite(
+                                              slug: movie_details[0].videoInfo!
+                                                  .slug!);
+                                        }
+
                                       },
                                       child: Container(
                                         child: Column(
@@ -1041,10 +1102,13 @@ class _MoviePageState extends State<MoviePage> {
                                     ),
                                     GestureDetector(
                                       onTap: () {
-                                        goTo(context, ListPlaylist(
-                                          responseScreens: responseScreenUser[0],
-                                          slug: movie_details[0].videoInfo!
-                                              .slug!,));
+                                        if(checkIfLogin()){
+                                          goTo(context, ListPlaylist(
+                                            responseScreens: responseScreenUser[0],
+                                            slug: movie_details[0].videoInfo!
+                                                .slug!,));
+                                        }
+
                                       },
                                       child: Container(
                                         child: Column(
@@ -1058,7 +1122,10 @@ class _MoviePageState extends State<MoviePage> {
                                     ),
                                     GestureDetector(
                                       onTap: () {
-                                        downloadFile();
+                                        if(checkIfLogin()){
+                                          downloadFile();
+                                        }
+
                                       },
                                       child: Container(
                                         child: Column(
@@ -1079,9 +1146,12 @@ class _MoviePageState extends State<MoviePage> {
                                     ),
                                     GestureDetector(
                                       onTap: () {
-                                        setState(() {
-                                          isComment = true;
-                                        });
+                                        if(checkIfLogin()){
+                                          setState(() {
+                                            isComment = true;
+                                          });
+                                        }
+
                                       },
                                       child: Container(
                                         child: Column(

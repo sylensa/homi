@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController passwordController = TextEditingController();
 
   login()async{
-    try{
+    // try{
       var js = await doPost('users/api/v2/auth/login', {
         "email": emailController.text.trim(),
         "password": passwordController.text.trim(),
@@ -39,9 +39,10 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       print("res createDummy: $js");
-      print("res access_token: ${js["response"]["access_token"]}");
+
 
       if(js["status"] == 'success'){
+        print("res access_token: ${js["response"]["access_token"]}");
         ResponseData responseData = ResponseData.fromJson(js["response"]);
         ResponseData _responseData = ResponseData(
             id: responseData.id,
@@ -82,11 +83,11 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pop(context);
         showDialogOk(message: "${js["message"]}",context: context,status: false);
       }
-    }catch(e){
-      Navigator.pop(context);
-      print("error: $e");
-      showDialogOk(message: "$e",context: context,status: false);
-    }
+    // }catch(e){
+    //   Navigator.pop(context);
+    //   print("error: $e");
+    //   showDialogOk(message: "$e",context: context,status: false);
+    // }
 
   }
 

@@ -59,10 +59,8 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     for (var i = 0; i < listBannerData[0].data.length; i++) {
       print("trailers:${listBannerData[0].data[i].trailerHlsUrl}");
-      if(listBannerData[0].data[i].trailerHlsUrl.isNotEmpty){
         vcs.add(VideoController(source: VideoPlayerController.network("${listBannerData[0].data[i].trailerHlsUrl}"),autoplay: true,volume: 0,)
           ..initialize());
-      }
 
     }
   }

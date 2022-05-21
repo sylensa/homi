@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
 import 'package:homi/screens/movie/index.dart';
+import 'package:homi/screens/series/index.dart';
 import 'package:homi/services/get_categories.dart';
 import 'package:homi/services/get_categories_videos.dart';
 import 'package:homi/services/get_homepage_banner.dart';
@@ -92,7 +93,13 @@ class _CategoryTypePageState extends State<CategoryTypePage> {
                                 itemBuilder: (BuildContext context, int index){
                                   return  GestureDetector(
                                     onTap: (){
-                                      goTo(context, MoviePage(slug: listCategoryVideos[i].videoList.data[index].slug,title: listCategoryVideos[i].videoList.data[index].title,));
+                                      if(widget.dataCategories!.isWebSeries == 1){
+                                        goTo(context, SeriesPage(slug: listCategoryVideos[i].videoList.data[index].slug,title: listCategoryVideos[i].videoList.data[index].title,));
+
+                                      }else{
+                                        goTo(context, MoviePage(slug: listCategoryVideos[i].videoList.data[index].slug,title: listCategoryVideos[i].videoList.data[index].title,));
+
+                                      }
 
                                     },
                                     child: Row(

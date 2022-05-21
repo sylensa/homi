@@ -9,6 +9,7 @@ import 'package:homi/screens/login/index.dart';
 import 'package:homi/screens/profile/add_edit_profile.dart';
 import 'package:homi/services/get_homepage_banner.dart';
 import 'package:homi/services/get_screens.dart';
+import 'package:homi/services/get_user.dart';
 
 class ManageProfile extends StatefulWidget {
   bool fromSettings;

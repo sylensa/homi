@@ -7,6 +7,7 @@ import 'package:homi/screens/history/index.dart';
 import 'package:homi/screens/login/index.dart';
 import 'package:homi/screens/offline/index.dart';
 import 'package:homi/screens/playlist/index.dart';
+import 'package:homi/screens/premium/index.dart';
 import 'package:homi/screens/profile/index.dart';
 import 'package:homi/screens/rent/index.dart';
 import 'package:homi/screens/settings/index.dart';
@@ -50,7 +51,7 @@ class _MenuPageState extends State<MenuPage> {
                   child: Row(
                     children: [
                       IconButton(onPressed: (){
-
+                        goTo(context, PremiumPage());
                       }, icon: Icon(Icons.subscript,color: themeAppColors(),)),
                       SizedBox(width: 10,),
                       Container(
@@ -325,13 +326,32 @@ class _MenuPageState extends State<MenuPage> {
           children: [
             sText("${properCase(responseScreenUser[0].name)}",color: themeAppColors(),weight: FontWeight.w700,size: 16,family: "ProximaBold"),
             SizedBox(height: 5,),
-            Container(
-              padding: EdgeInsets.only(left: 15,right: 15,top: 5,bottom: 5),
-              decoration: BoxDecoration(
-                  color: dPurple,
-                  borderRadius: BorderRadius.circular(30)
+            responseUserData[0].isSubscribed == 1 ?
+            GestureDetector(
+              onTap: (){
+                goTo(context, PremiumPage());
+              },
+              child: Container(
+                padding: EdgeInsets.only(left: 15,right: 15,top: 5,bottom: 5),
+                decoration: BoxDecoration(
+                    color: dPurple,
+                    borderRadius: BorderRadius.circular(30)
+                ),
+                child: sText2("Plan: ${ responseUserData[0].subscribedPlan!.name}",color: Colors.white),
               ),
-              child: sText2("Go Premium",color: Colors.white),
+            ) :
+            GestureDetector(
+              onTap: (){
+                goTo(context, PremiumPage());
+              },
+              child: Container(
+                padding: EdgeInsets.only(left: 15,right: 15,top: 5,bottom: 5),
+                decoration: BoxDecoration(
+                    color: dPurple,
+                    borderRadius: BorderRadius.circular(30)
+                ),
+                child: sText2("Go Premium",color: Colors.white),
+              ),
             )
           ],
         ),
