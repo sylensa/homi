@@ -22,7 +22,7 @@ class _LaunchScreenState extends State<LaunchScreen> {
     // await userAccountController.dropUserData("user_account");
     // await userAccountController.dropUserData("user_screen");
     List<Map<String, dynamic>> timelineResponse = await userAccountController.fetchUserData("user_account");
-    print("response:${timelineResponse}");
+    print("response timelineResponse:${timelineResponse}");
     if(timelineResponse.isNotEmpty){
       Map<String, dynamic> res = json.decode(timelineResponse[0]["response"]);
       ResponseData dataData = ResponseData.fromJson(res);

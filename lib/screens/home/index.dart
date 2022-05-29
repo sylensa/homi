@@ -125,6 +125,7 @@ class _HomePageState extends State<HomePage> {
                       viewportFraction: 2.7,
                       aspectRatio: 2.0,
                       pageSnapping: true,
+
                       onPageChanged: (index, reason) {
                         setState(() {
                           _currentSlide = index;

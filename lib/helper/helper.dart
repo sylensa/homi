@@ -40,6 +40,7 @@ List<BannerResponse> listNewData = [];
 List<BannerResponse> listHomeContent = [];
 List<Main> listCategoryVideos = [];
 List<MyPlaylist> myPlaylist = [];
+var userToken = "";
 List<BoxShadow> elevation({required Color color, required int elevation}) {
   return [
     BoxShadow(color: color.withOpacity(0.6), offset: Offset(0.0, 4.0), blurRadius: 3.0 * elevation, spreadRadius: -1.0 * elevation),
@@ -657,6 +658,7 @@ doDelete(String urlAfterBase) async {
 }
 
 doPost(String urlAfterBase, Map body) async {
+  var headers = {"authorization": "Bearer " + userToken,"X-SCREEN-ID":responseScreenUser.isNotEmpty ? responseScreenUser[0].id : ""};
   print('Calling $base$urlAfterBase...');
   print('body $body...');
   var url = Uri.parse('$base$urlAfterBase');
@@ -677,9 +679,12 @@ doPost(String urlAfterBase, Map body) async {
 }
 
 doGet(String urlAfterBase) async {
+  var headers = {"authorization": "Bearer " + userToken,"X-SCREEN-ID":responseScreenUser.isNotEmpty ? responseScreenUser[0].id : ""};
   var url = Uri.parse('$base$urlAfterBase');
   print("url: $url");
   print("userToken: $userToken");
+  print("userScreenId: ${responseScreenUser.isNotEmpty ? responseScreenUser[0].id : ""}");
+  print("headers: $headers");
   var js;
   if(userToken.isNotEmpty){
     js =await http.get(url, headers: headers );

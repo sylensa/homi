@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:homi/helper/helper.dart';
 import 'package:homi/helper/hide.dart';
 import 'package:homi/helper/progress_dialog.dart';
@@ -11,6 +12,7 @@ import 'package:homi/screens/profile/index.dart';
 import 'package:homi/screens/signup/index.dart';
 import 'package:homi/services/get_homepage_banner.dart';
 import 'package:homi/services/get_user.dart';
+import 'package:http/http.dart' as http;
 import 'package:iconsax/iconsax.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -26,6 +28,9 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
+  GoogleSignInAccount? _currentUser;
+  String _contactText = '';
+
   login()async{
     // try{
       var js = await doPost('users/api/v2/auth/login', {
@@ -40,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
 
       print("res createDummy: $js");
 
-
+        // return;
       if(js["status"] == 'success'){
         print("res access_token: ${js["response"]["access_token"]}");
         ResponseData responseData = ResponseData.fromJson(js["response"]);
@@ -76,6 +81,7 @@ class _LoginPageState extends State<LoginPage> {
         responseUserData.clear();
         responseUserData.add(dataData);
         userToken = responseUserData[0].accessToken;
+        print("new userToken:$userToken");
         Navigator.pop(context);
         goTo(context, ManageProfile(),replace: true);
         toast("Account logged in successfully");
@@ -91,6 +97,136 @@ class _LoginPageState extends State<LoginPage> {
 
   }
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    // Optional clientId
+    clientId: '1013728011895-pju5fr5ucmhkfclth73qumptgtlnpgr2.apps.googleusercontent.com',
+    scopes: <String>[
+      'email',
+      'https://www.googleapis.com/auth/contacts.readonly',
+    ],
+  );
+
+  Future<void> _handleGetContact(GoogleSignInAccount user) async {
+    setState(() {
+      _contactText = 'Loading contact info...';
+    });
+    final http.Response response = await http.get(
+      Uri.parse('https://people.googleapis.com/v1/people/me/connections'
+          '?requestMask.includeField=person.names'),
+      headers: await user.authHeaders,
+    );
+    if (response.statusCode != 200) {
+      setState(() {
+        _contactText = 'People API gave a ${response.statusCode} '
+            'response. Check logs for details.';
+      });
+      print('People API ${response.statusCode} response: ${response.body}');
+      return;
+    }
+    final Map<String, dynamic> data =
+    json.decode(response.body) as Map<String, dynamic>;
+    final String? namedContact = _pickFirstNamedContact(data);
+    setState(() {
+      if (namedContact != null) {
+        _contactText = 'I see you know ${namedContact}!';
+      } else {
+        _contactText = 'No contacts to display.';
+      }
+    });
+
+    print("_contactText:$_contactText");
+  }
+
+
+  String? _pickFirstNamedContact(Map<String, dynamic> data) {
+    final List<dynamic>? connections = data['connections'] as List<dynamic>?;
+    final Map<String, dynamic>? contact = connections?.firstWhere(
+          (dynamic contact) => contact['names'] != null,
+      orElse: () => null,
+    ) as Map<String, dynamic>?;
+    if (contact != null) {
+      final Map<String, dynamic>? name = contact['names'].firstWhere(
+            (dynamic name) => name['displayName'] != null,
+        orElse: () => null,
+      ) as Map<String, dynamic>?;
+      if (name != null) {
+        return name['displayName'] as String?;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _handleSignIn() async {
+    try {
+      await _googleSignIn.signIn();
+    } catch (error) {
+      print(error);
+    }
+  }
+
+  Future<void> _handleSignOut() => _googleSignIn.disconnect();
+
+  Widget _buildBody() {
+    final GoogleSignInAccount? user = _currentUser;
+    if (user != null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: <Widget>[
+          ListTile(
+            leading: GoogleUserCircleAvatar(
+              identity: user,
+            ),
+            title: Text(user.displayName ?? ''),
+            subtitle: Text(user.email),
+          ),
+          const Text('Signed in successfully.'),
+          Text(_contactText),
+          ElevatedButton(
+            onPressed: _handleSignOut,
+            child: const Text('SIGN OUT'),
+          ),
+          ElevatedButton(
+            child: const Text('REFRESH'),
+            onPressed: () => _handleGetContact(user),
+          ),
+        ],
+      );
+    }
+    else {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: <Widget>[
+          const Text('You are not currently signed in.'),
+          ElevatedButton(
+            onPressed: _handleSignIn,
+            child: const Text('SIGN IN'),
+          ),
+        ],
+      );
+    }
+  }
+
+  tapToSign(){
+    // _handleSignOut();
+    print("hey");
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount? account) {
+      setState(() {
+        _currentUser = account;
+      });
+      if (_currentUser != null) {
+        print("_currentUser:${_currentUser!.email}");
+        _handleGetContact(_currentUser!);
+      }
+    });
+    _googleSignIn.signInSilently();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    tapToSign();
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -286,18 +422,23 @@ class _LoginPageState extends State<LoginPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
 
                           children: [
-                            Container(
-                              width: 300,
-                              padding: EdgeInsets.only(left: 20,right: 20,top: 15,bottom: 15),                              child: Row(
-                                children: [
-                                  Icon(FontAwesomeIcons.google,color: Colors.white,),
-                                  SizedBox(width: 10,),
-                                  sText2("Continue with Google",color: Colors.white,weight: FontWeight.bold),
-                                ],
-                              ),
-                              decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  borderRadius: BorderRadius.circular(30)
+                            GestureDetector(
+                              onTap: (){
+                                 _handleSignIn();
+                              },
+                              child: Container(
+                                width: 300,
+                                padding: EdgeInsets.only(left: 20,right: 20,top: 15,bottom: 15),                              child: Row(
+                                  children: [
+                                    Icon(FontAwesomeIcons.google,color: Colors.white,),
+                                    SizedBox(width: 10,),
+                                    sText2("Continue with Google",color: Colors.white,weight: FontWeight.bold),
+                                  ],
+                                ),
+                                decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(30)
+                                ),
                               ),
                             ),
                           ],

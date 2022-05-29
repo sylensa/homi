@@ -16,12 +16,12 @@ class _FavouriteMoviesState extends State<FavouriteMovies> {
   List<FavouriteData> listFavouriteData = [];
   getMyFavouriteVideos()async{
     // try{
-   var js = await doGet('useractions/api/v2/favourite');
+   var js = await doGet('useractions/api/v2/favourite?page=1');
     print("res timeline: $js");
     if(!js["error"]){
       for(int i = 0; i < js["response"]["data"].length; i++){
-        FavouriteData responseScreens = FavouriteData.fromJson(js["response"]["data"][i]);
-        listFavouriteData.add(responseScreens);
+        FavouriteData favouriteData = FavouriteData.fromJson(js["response"]["data"][i]);
+        listFavouriteData.add(favouriteData);
       }
     }
     if(mounted){
@@ -71,34 +71,51 @@ class _FavouriteMoviesState extends State<FavouriteMovies> {
                 itemBuilder: (BuildContext context, int index) =>
                     GestureDetector(
                       onTap: (){
-                        goTo(context, MoviePage());
+                        if(listFavouriteData[index].isWebseries == 1){
+                          print("series");
+                        }else{
+                          goTo(context, MoviePage(
+                            slug: listFavouriteData[index].slug,
+                            title: listFavouriteData[index].title,));
+                        }
+
                       },
-                      child: Row(
+                      child: Stack(
                         children: [
-                          Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(5.0),
-
-                                child: Container(
-                                  height: 150,
-                                  child: displayImage("${listFavouriteData[index].thumbnailImage}",radius: 0,width: 100),
-                                ),
-                              ),
-                              Positioned(
-
-                                right: 0,
-                                child: Container(
-                                    padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),
-                                    decoration: BoxDecoration(
-                                        color: Colors.black12,
-                                        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
-                                    ),
-                                    child: Icon(Icons.more_vert,color: dPurple,)
-                                ),
-                              )
-                            ],
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(5.0),
+                            child: Container(
+                              height: 150,
+                              child: displayImage("${listFavouriteData[index].thumbnailImage}",radius: 0),
+                            ),
                           ),
+                          Positioned(
+                            right: 0,
+                            child: Container(
+                                padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),
+                                decoration: BoxDecoration(
+                                    color: Colors.black12,
+                                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
+                                ),
+                                child: popUpMenu(movieId:listFavouriteData[index].slug,context: context )
+                            ),
+                          ),
+                          Positioned(
+                            left: 0,
+                            child:  GestureDetector(
+                              onTap: () {
+                                  setState(() {
+                                    removeMovieFromFavourite(slug:listFavouriteData[index].slug);
+                                    listFavouriteData.removeAt(index);
+                                  });
+
+
+                              },
+                              child: Container(
+                                child:Icon(Icons.favorite, color: dPurple,),
+                              ),
+                            ),
+                          )
                         ],
                       ),
                     ),

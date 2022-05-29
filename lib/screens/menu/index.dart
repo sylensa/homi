@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homi/helper/helper.dart';
+import 'package:homi/helper/hide.dart';
 import 'package:homi/pages/index.dart';
 import 'package:homi/screens/contact/index.dart';
 import 'package:homi/screens/favourite/index.dart';
@@ -7,6 +8,7 @@ import 'package:homi/screens/history/index.dart';
 import 'package:homi/screens/login/index.dart';
 import 'package:homi/screens/offline/index.dart';
 import 'package:homi/screens/playlist/index.dart';
+import 'package:homi/screens/playlist/playlists.dart';
 import 'package:homi/screens/premium/index.dart';
 import 'package:homi/screens/profile/index.dart';
 import 'package:homi/screens/rent/index.dart';
@@ -147,7 +149,7 @@ class _MenuPageState extends State<MenuPage> {
                 Divider(color: Colors.grey[200],),
                 GestureDetector(
                   onTap: (){
-                    goTo(context, MyPlaylistMovies());
+                    goTo(context, ListMyPlaylist());
                   },
                   child: Container(
                     padding: leftPadding(10),
@@ -293,10 +295,14 @@ class _MenuPageState extends State<MenuPage> {
                     child: Row(
                       children: [
                         IconButton(onPressed: ()async{
+                          setState(() {
+                            responseUserData.clear();
+                            responseScreenUser.clear();
+                            userToken = '';
+                          });
                           await userAccountController.dropUserData("user_account");
                           await userAccountController.dropUserData("user_screen");
-                          responseUserData.clear();
-                          responseScreenUser.clear();
+
                           goTo(context, Index(initialIndex: 0,),replace: true);
                         }, icon: Icon(Icons.logout,color: themeAppColors(),)),
                         SizedBox(width: 10,),

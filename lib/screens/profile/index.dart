@@ -27,7 +27,8 @@ class _ManageProfileState extends State<ManageProfile> {
   getScreens()async{
     // try{
      js = await doGet('users/api/v2/screens');
-    print("res timeline: $js");
+    print("res listResponseScreensssssss: $js");
+    // return;
     if(!js["error"]){
       for(int i = 0; i < js["response"]["screens"].length; i++){
         ResponseScreens responseScreens = ResponseScreens.fromJson(js["response"]["screens"][i]);

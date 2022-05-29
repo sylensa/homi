@@ -7,16 +7,16 @@ import 'package:homi/pages/list_playlist.dart';
 import 'package:homi/services/get_playlist.dart';
 import 'package:homi/services/get_screens.dart';
 
-class CreatePlaylist extends StatefulWidget {
-  ResponseScreens? responseScreens;
-  String slug;
-  CreatePlaylist({this.responseScreens,this.slug = ''}) ;
+class EditPlaylist extends StatefulWidget {
+  String name;
+  String id;
+  EditPlaylist({this.name = '',this.id = ''}) ;
 
   @override
-  _CreatePlaylistState createState() => _CreatePlaylistState();
+  _EditPlaylistState createState() => _EditPlaylistState();
 }
 
-class _CreatePlaylistState extends State<CreatePlaylist> {
+class _EditPlaylistState extends State<EditPlaylist> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController nameController = TextEditingController();
   String profileImagePath = '';
@@ -40,26 +40,21 @@ class _CreatePlaylistState extends State<CreatePlaylist> {
     }
   }
   bool progressCode = false;
-  createPlaylist({String name = ''})async{
+  editPlaylist({String name = ''})async{
     // try{
-    var js = await doPost('useractions/api/v2/create_playlist',{"screen": responseUserData.isNotEmpty ? widget.responseScreens!.id : "","name":name,});
+    var js = await doPost('useractions/api/v2/create_playlist',{"screen": responseScreenUser[0].id,"name":name,"id": widget.id});
     print("res timeline: $js");
     if(js["status"] == "success"){
-      Navigator.pop(context);
-      goTo(context, ListPlaylist(responseScreens: widget.responseScreens,slug: widget.slug,));
-      setState(() {
-        progressCode = false;
-        toast(js["message"]);
-      });
+      await  getPlaylist();
     }
     else if(js["message"] == "Playlist already exists"){
       Navigator.pop(context);
-      goTo(context, ListPlaylist(responseScreens: widget.responseScreens,slug: widget.slug,));
       setState(() {
         progressCode = false;
         toast(js["message"]);
       });
     } else{
+      Navigator.pop(context);
       setState(() {
         progressCode = false;
         toast(js["message"]);
@@ -76,12 +71,18 @@ class _CreatePlaylistState extends State<CreatePlaylist> {
   getPlaylist()async{
     // try{
     var js = await doGet('useractions/api/v2/create_playlist');
-    print("res timeline: $js");
+    print("res list_playlist: $js");
     if(js["status"] == 'success'){
       myPlaylist.clear();
       MyPlaylist responsePlaylist = MyPlaylist.fromJson(js["response"]["my_playlist"]);
       myPlaylist.add(responsePlaylist);
+      Navigator.pop(context);
+      setState(() {
+        progressCode = false;
+        toast(js["message"]);
+      });
     }else{
+      Navigator.pop(context);
       toast(js["message"]);
     }
     setState(() {
@@ -94,10 +95,12 @@ class _CreatePlaylistState extends State<CreatePlaylist> {
     // }
 
   }
+
   @override
   void initState() {
     // TODO: implement initState
     print(progressCode);
+    nameController.text = widget.name;
     super.initState();
   }
   @override
@@ -120,7 +123,7 @@ class _CreatePlaylistState extends State<CreatePlaylist> {
             children: [
               SizedBox(height: 10,),
               Container(
-                child: sText("Create Playlist",weight: FontWeight.bold,size: 20),
+                child: sText("Edit Playlist",weight: FontWeight.bold,size: 20),
               ),
 
               Column(
@@ -172,7 +175,7 @@ class _CreatePlaylistState extends State<CreatePlaylist> {
                           setState(() {
                             progressCode = true;
                           });
-                          createPlaylist(name: nameController.text);
+                          editPlaylist(name: nameController.text);
                         }else{
                           toast("Field is empty");
                         }

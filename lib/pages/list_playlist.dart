@@ -22,7 +22,7 @@ class _ListPlaylisttState extends State<ListPlaylist> {
   String profileImagePath = '';
   String profileImageName = '';
   bool progressCode = true;
-  List<Datum> data = [];
+  List<PlaylistData> data = [];
   attachDoc() async{
     FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: false, type: FileType.image);
 
@@ -44,7 +44,7 @@ class _ListPlaylisttState extends State<ListPlaylist> {
 
   getPlaylist()async{
     // try{
-    var js = await doGet('useractions/api/v2/create_playlist?video_id=queen-of-the-sun&page=1');
+    var js = await doGet('useractions/api/v2/create_playlist');
     print("res timeline: $js");
     if(js["status"] == 'success'){
       MyPlaylist responsePlaylist = MyPlaylist.fromJson(js["response"]["my_playlist"]);
@@ -83,6 +83,7 @@ class _ListPlaylisttState extends State<ListPlaylist> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    myPlaylist.clear();
     getPlaylist();
   }
   @override

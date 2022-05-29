@@ -66,11 +66,11 @@ class _MoviePageState extends State<MoviePage> {
   Future<void>? _initializeVideoPlayerFuture;
   int? _playBackTime;
 
-  checkIfLogin(){
+  checkIfLogin({bool isPlay = false}){
     if(responseScreenUser.isNotEmpty){
       if(responseUserData[0].isSubscribed == 1){
         setState(() {
-          isPlay = true;
+          isPlay = isPlay;
         });
       return true;
       }else{
@@ -922,7 +922,7 @@ class _MoviePageState extends State<MoviePage> {
                                         //   showDialogOk(message: "You've to login to access this feature",context: context,target: LoginPage(),replace: false,status: true);
                                         //   goTo(context, LoginPage());
                                         // }
-                                        if( checkIfLogin()){
+                                        if( checkIfLogin(isPlay: true)){
                                           _getValuesAndPlay(movie_details[0].videoInfo!.hlsPlaylistUrl!);
                                         }
                                        ;

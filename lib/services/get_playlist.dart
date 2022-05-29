@@ -74,7 +74,7 @@ class MyPlaylist {
   });
 
   int currentPage;
-  List<Datum> data;
+  List<PlaylistData> data;
   String firstPageUrl;
   int from;
   int lastPage;
@@ -88,7 +88,7 @@ class MyPlaylist {
 
   factory MyPlaylist.fromJson(Map<String, dynamic> json) => MyPlaylist(
     currentPage: json["current_page"] ?? 0,
-    data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
+    data: List<PlaylistData>.from(json["data"].map((x) => PlaylistData.fromJson(x))),
     firstPageUrl: json["first_page_url"] ?? "",
     from: json["from"] ?? 0,
     lastPage: json["last_page"] ?? 0,
@@ -117,8 +117,8 @@ class MyPlaylist {
   };
 }
 
-class Datum {
-  Datum({
+class PlaylistData {
+  PlaylistData({
     required this.id,
     required this.name,
     required this.userId,
@@ -144,7 +144,7 @@ class Datum {
   int videoCount;
   String posterImage;
 
-  factory Datum.fromJson(Map<String, dynamic> json) => Datum(
+  factory PlaylistData.fromJson(Map<String, dynamic> json) => PlaylistData(
     id: json["_id"],
     name: json["name"],
     userId: json["user_id"],
