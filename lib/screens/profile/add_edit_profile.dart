@@ -7,7 +7,8 @@ import 'package:homi/services/get_screens.dart';
 
 class AddEdithProfile extends StatefulWidget {
    ResponseScreens? responseScreens;
-   AddEdithProfile({this.responseScreens}) ;
+   bool isEdit;
+   AddEdithProfile({this.responseScreens,this.isEdit = true}) ;
 
   @override
   _AddEdithProfileState createState() => _AddEdithProfileState();
@@ -18,6 +19,7 @@ class _AddEdithProfileState extends State<AddEdithProfile> {
   TextEditingController nameController = TextEditingController();
   String profileImagePath = '';
   String profileImageName = '';
+  bool isSubmit = true;
   attachDoc() async{
     FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: false, type: FileType.image);
 
@@ -36,12 +38,65 @@ class _AddEdithProfileState extends State<AddEdithProfile> {
       // User canceled the picker
     }
   }
+  addProfile()async{
+    // try{
+    var js = await doPost('users/api/v2/save-screen', {
+      "name": nameController.text.trim(),
+      "profile_image":profileImagePath,
+    });
+
+    print("res createDummy: $js");
+
+    // return;
+    if(js["status"] == 'success'){
+      toast(js["message"]);
+      Navigator.pop(context,true);
+    } else{
+      setState((){
+        isSubmit = true;
+      });
+      showDialogOk(message: "${js["message"]}",context: context,status: false);
+    }
+    // }catch(e){
+    //   Navigator.pop(context);
+    //   print("error: $e");
+    //   showDialogOk(message: "$e",context: context,status: false);
+    // }
+
+  }
+  editProfile()async{
+    // try{
+    var js = await doPost('users/api/v2/save-screen', {
+      "name": nameController.text.trim(),
+      "screen":widget.responseScreens!.id,
+    });
+
+    print("res createDummy: $js");
+
+    // return;
+    if(js["status"] == 'success'){
+      toast(js["message"]);
+      Navigator.pop(context,true);
+    } else{
+      setState((){
+        isSubmit = true;
+      });
+      showDialogOk(message: "${js["message"]}",context: context,status: false);
+    }
+    // }catch(e){
+    //   Navigator.pop(context);
+    //   print("error: $e");
+    //   showDialogOk(message: "$e",context: context,status: false);
+    // }
+
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    nameController.text = widget.responseScreens!.name;
+    nameController.text = widget.isEdit ? widget.responseScreens!.name : "";
+    profileImagePath = widget.isEdit ? widget.responseScreens!.profileImage : "";
   }
   @override
   Widget build(BuildContext context) {
@@ -63,7 +118,7 @@ class _AddEdithProfileState extends State<AddEdithProfile> {
             children: [
               SizedBox(height: 10,),
               Container(
-                child: sText("Add Profile"),
+                child: sText(widget.isEdit ? "Edit Profile" : "Add Profile",weight: FontWeight.bold),
               ),
               SizedBox(height: 10,),
               GestureDetector(
@@ -124,13 +179,35 @@ class _AddEdithProfileState extends State<AddEdithProfile> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Container(
-                      padding: EdgeInsets.only(top: 10,bottom: 10),
-                      width: 150,
-                      child: sText2("Save",color: Colors.white,align: TextAlign.center),
-                      decoration: BoxDecoration(
-                        color: dPurple,
-                        borderRadius: BorderRadius.circular(5)
+                    GestureDetector(
+                      onTap: (){
+                        if(isSubmit){
+                          setState((){
+                            isSubmit = false;
+                          });
+                          if(widget.isEdit){
+                            editProfile();
+                          }else{
+                            addProfile();
+                          }
+                        }
+
+                      },
+                      child: Container(
+                        padding: EdgeInsets.only(top: 10,bottom: 10),
+                        width: 150,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            sText2("Save",color: Colors.white,align: TextAlign.center),
+                            SizedBox(width: 10,),
+                            isSubmit ? Container() : progress()
+                          ],
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSubmit ? dPurple : Colors.grey[400],
+                          borderRadius: BorderRadius.circular(5)
+                        ),
                       ),
                     ),
                     GestureDetector(

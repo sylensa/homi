@@ -14,6 +14,7 @@ import 'package:homi/services/get_homepage_banner.dart';
 import 'package:homi/services/get_user.dart';
 import 'package:http/http.dart' as http;
 import 'package:iconsax/iconsax.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LoginPage extends StatefulWidget {
@@ -376,20 +377,32 @@ class _LoginPageState extends State<LoginPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 300,
-                              padding: EdgeInsets.only(left: 20,right: 20,top: 15,bottom: 15),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Icon(FontAwesomeIcons.apple,color: Colors.white,),
-                                  SizedBox(width: 10,),
-                                  sText2("Sign in with Apple",color: Colors.white,weight: FontWeight.bold),
-                                ],
-                              ),
-                              decoration: BoxDecoration(
-                                  color: Colors.black,
-                                  borderRadius: BorderRadius.circular(30)
+                            GestureDetector(
+                              onTap: ()async{
+                                final credential = await SignInWithApple.getAppleIDCredential(
+                                  scopes: [
+                                    AppleIDAuthorizationScopes.email,
+                                    AppleIDAuthorizationScopes.fullName,
+                                  ],
+                                );
+
+                                print(credential);
+                              },
+                              child: Container(
+                                width: 300,
+                                padding: EdgeInsets.only(left: 20,right: 20,top: 15,bottom: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Icon(FontAwesomeIcons.apple,color: Colors.white,),
+                                    SizedBox(width: 10,),
+                                    sText2("Sign in with Apple",color: Colors.white,weight: FontWeight.bold),
+                                  ],
+                                ),
+                                decoration: BoxDecoration(
+                                    color: Colors.black,
+                                    borderRadius: BorderRadius.circular(30)
+                                ),
                               ),
                             ),
                           ],

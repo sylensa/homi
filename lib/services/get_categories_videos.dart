@@ -22,14 +22,14 @@ class GetCategoryVideos {
   int statusCode;
   String status;
   String message;
-  Response response;
+  ResponseCategory response;
 
   factory GetCategoryVideos.fromJson(Map<String, dynamic> json) => GetCategoryVideos(
     error: json["error"],
     statusCode: json["statusCode"],
     status: json["status"],
     message: json["message"],
-    response: Response.fromJson(json["response"]),
+    response: ResponseCategory.fromJson(json["response"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -41,8 +41,8 @@ class GetCategoryVideos {
   };
 }
 
-class Response {
-  Response({
+class ResponseCategory {
+  ResponseCategory({
     required this.main,
     required this.categoryVideos,
     required this.genreVideos,
@@ -54,7 +54,7 @@ class Response {
   List<dynamic> genreVideos;
   int webSeries;
 
-  factory Response.fromJson(Map<String, dynamic> json) => Response(
+  factory ResponseCategory.fromJson(Map<String, dynamic> json) => ResponseCategory(
     main: List<Main>.from(json["main"].map((x) => Main.fromJson(x))),
     categoryVideos: List<dynamic>.from(json["category_videos"].map((x) => x)),
     genreVideos: List<dynamic>.from(json["genre_videos"].map((x) => x)),

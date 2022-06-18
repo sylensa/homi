@@ -1,80 +1,158 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:homi/helper/helper.dart';
-import 'package:homi/screens/movie/index.dart';
+import 'package:homi/services/get_my_rented_movies.dart';
+import 'package:homi/services/get_my_transactions.dart';
 
 class RentedMovies extends StatefulWidget {
   const RentedMovies({Key? key}) : super(key: key);
 
   @override
-  _RentedMoviesState createState() => _RentedMoviesState();
+  State<RentedMovies> createState() => _RentedMoviesState();
 }
 
 class _RentedMoviesState extends State<RentedMovies> {
+  bool progressCode = true;
+  String progressCodeError = "Sorry, No transactions available";
+  List<RentData> listRentData = [];
+  getMyRentedMovies()async{
+    // try{
+    var json =   {
+      "filter":null,
+      "filters":{},
+      "intialRequest":0,
+      "orderByFieldName":null,
+      "page":1,
+      "rowsPerPage":10,
+      "searchRecord":{"transaction_id":"","plan_name":""}
+    };
+    var js = await doPost('payments/api/v2/purchase_videos/records',json
+    );
+    print("res timeline: $js");
+    if(!js["error"] && js["data"]["data"].isNotEmpty){
+      for(int i = 0; i < js["data"]["data"].length; i++){
+        RentData rentData = RentData.fromJson(js["data"]["data"][i]);
+        listRentData.add(rentData);
+      }
+    }else{
+      if(js["error"]){
+        progressCodeError = js["message"];
+      }
+    }
+    if(mounted){
+      setState(() {
+        progressCode = false;
+      });
+    }
+
+    // }catch(e){
+    //   print("error timeline: $e");
+    //   toast("$e, try again");
+    // }
+
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getMyRentedMovies();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: themeAppBarColors(),
       appBar: AppBar(
-        elevation: 0,
-        centerTitle: false,
         backgroundColor: themeAppBarColors(),
-        title: sText("Rented Movies",weight: FontWeight.bold),
-        leading: IconButton(onPressed: (){
-          Navigator.pop(context);
-        }, icon: Icon(Icons.arrow_back_ios,color: themeAppColors(),)),
+        title: sText("My Transactions",weight: FontWeight.bold,size: 20),
+        centerTitle: false,
+        elevation: 0,
       ),
       body: Container(
-        padding: EdgeInsets.only(left: 10,right: 10,bottom: 20,top: 20),
-
-        child:  Column(
+        child: Column(
           children: [
+            listRentData.isNotEmpty ?
             Expanded(
-              child: StaggeredGridView.countBuilder(
-                padding: appPadding(0),
-                // shrinkWrap: true,
-                crossAxisCount: 3,
-                itemCount:12,
-                itemBuilder: (BuildContext context, int index) =>
-                    GestureDetector(
-                      onTap: (){
-                        goTo(context, MoviePage());
-                      },
-                      child: Row(
+              child: ListView.builder(
+                  itemCount: 10,
+                  itemBuilder: (BuildContext context,int index){
+                    return Container(
+                      padding: EdgeInsets.only(right: 10,left: 10,top: 10,bottom: 20),
+                      margin: EdgeInsets.only(right: 10,left: 10,bottom: 10),
+                      decoration: BoxDecoration(
+                          color: Colors.black26,
+                          borderRadius: BorderRadius.circular(10)
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(5.0),
+                          Container(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
-                                child: Container(
-                                  height: 150,
-                                  child: Image.asset("assets/images/pabi at ledge.jpg",width: 110,fit: BoxFit.fitHeight,),
-                                ),
-                              ),
-                              Positioned(
+                              children: [
+                                Container(
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        child: sText("M",weight: FontWeight.bold,size: 20),
+                                        padding: appPadding(10),
+                                        decoration: BoxDecoration(
+                                            color: dPurple,
+                                            shape: BoxShape.circle
+                                        ),
+                                      ),
+                                      SizedBox(width: 10,),
+                                      Container(
+                                        child: sText("Monthly Standard",weight: FontWeight.w500),
+                                      ),
 
-                                right: 0,
-                                child: Container(
-                                    padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),
-                                    decoration: BoxDecoration(
-                                        color: Colors.black12,
-                                        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30))
-                                    ),
-                                    child: Icon(Icons.more_vert,color: dPurple,)
+                                    ],
+
+                                  ),
+
                                 ),
-                              )
-                            ],
+                                Container(
+                                  child: sText("5.99",weight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
                           ),
+                          SizedBox(height: 20,),
+                          Container(
+                            child: Row(
+                              children: [
+                                SizedBox(height: 0,),
+                                Container(
+                                  child: sText("May 20 2022 09:59 PM",weight: FontWeight.normal),
+                                ),
+                                Expanded(child: Container()),
+                                Container(
+                                  child: sText2("Paid",weight: FontWeight.bold,color: Colors.green),
+                                ),
+                              ],
+                            ),
+                          ),
+
+
                         ],
                       ),
-                    ),
-                staggeredTileBuilder: (int index) =>
-                new StaggeredTile.fit(1),
-                mainAxisSpacing: 10.0,
-                crossAxisSpacing: 10.0,
-              ),
-            ),
+                    );
+                  }),
+            )
+                : progressCode ?
+            Expanded(
+                child: Center(
+                  child: progress(),
+                ))
+                : Expanded(
+                child: Center(
+                  child: Container(
+                      child: sText("$progressCodeError",weight: FontWeight.bold)
+                  ),
+                )),
           ],
         ),
       ),

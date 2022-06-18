@@ -13,6 +13,7 @@ import 'package:homi/screens/premium/index.dart';
 import 'package:homi/screens/profile/index.dart';
 import 'package:homi/screens/rent/index.dart';
 import 'package:homi/screens/settings/index.dart';
+import 'package:homi/screens/transactions/index.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({Key? key}) : super(key: key);
@@ -207,18 +208,23 @@ class _MenuPageState extends State<MenuPage> {
                   ),
                 ),
                 Divider(color: Colors.grey[200],),
-                Container(
-                  padding: leftPadding(10),
-                  child: Row(
-                    children: [
-                      IconButton(onPressed: (){
-
-                      }, icon: Icon(Icons.save_alt_outlined,color: themeAppColors(),)),
-                      SizedBox(width: 10,),
-                      Container(
-                        child: sText("My Transactions",weight: FontWeight.bold),
-                      )
-                    ],
+                GestureDetector(
+                  onTap: (){
+                    goTo(context, MyTransactions());
+                  },
+                  child: Container(
+                    padding: leftPadding(10),
+                    child: Row(
+                      children: [
+                        IconButton(onPressed: (){
+                          goTo(context, MyTransactions());
+                        }, icon: Icon(Icons.save_alt_outlined,color: themeAppColors(),)),
+                        SizedBox(width: 10,),
+                        Container(
+                          child: sText("My Transactions",weight: FontWeight.bold),
+                        )
+                      ],
+                    ),
                   ),
                 ),
                 Divider(color: Colors.grey[200],),

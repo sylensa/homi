@@ -11,6 +11,7 @@ import 'package:homi/pages/list_playlist.dart';
 import 'package:homi/screens/profile/add_edit_profile.dart';
 import 'package:homi/services/get_categories.dart';
 import 'package:homi/services/get_categories_videos.dart';
+import 'package:homi/services/get_history_movies.dart';
 import 'package:homi/services/get_homepage_banner.dart';
 import 'package:homi/services/get_playlist.dart';
 import 'package:homi/services/get_screens.dart';
@@ -41,6 +42,8 @@ List<BannerResponse> listHomeContent = [];
 List<Main> listCategoryVideos = [];
 List<MyPlaylist> myPlaylist = [];
 var userToken = "";
+var deviceId = "";
+List<ResponseContinueData> listHistoryData = [];
 List<BoxShadow> elevation({required Color color, required int elevation}) {
   return [
     BoxShadow(color: color.withOpacity(0.6), offset: Offset(0.0, 4.0), blurRadius: 3.0 * elevation, spreadRadius: -1.0 * elevation),
@@ -658,9 +661,10 @@ doDelete(String urlAfterBase) async {
 }
 
 doPost(String urlAfterBase, Map body) async {
-  var headers = {"authorization": "Bearer " + userToken,"X-SCREEN-ID":responseScreenUser.isNotEmpty ? responseScreenUser[0].id : ""};
+  var headers = {"authorization": "Bearer " + userToken,"X-SCREEN-ID":responseScreenUser.isNotEmpty ? responseScreenUser[0].id : "","X-DEVICE-ID": deviceId};
   print('Calling $base$urlAfterBase...');
   print('body $body...');
+  print('body $headers...');
   var url = Uri.parse('$base$urlAfterBase');
   var decoded;
   var js;
@@ -679,7 +683,7 @@ doPost(String urlAfterBase, Map body) async {
 }
 
 doGet(String urlAfterBase) async {
-  var headers = {"authorization": "Bearer " + userToken,"X-SCREEN-ID":responseScreenUser.isNotEmpty ? responseScreenUser[0].id : ""};
+  var headers = {"authorization": "Bearer " + userToken,"X-SCREEN-ID":responseScreenUser.isNotEmpty ? responseScreenUser[0].id : "","X-DEVICE-ID": deviceId};
   var url = Uri.parse('$base$urlAfterBase');
   print("url: $url");
   print("userToken: $userToken");

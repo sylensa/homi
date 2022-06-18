@@ -7,6 +7,7 @@ import 'package:homi/helper/progress_dialog.dart';
 import 'package:homi/pages/index.dart';
 import 'package:homi/screens/login/index.dart';
 import 'package:homi/screens/profile/add_edit_profile.dart';
+import 'package:homi/services/get_history_movies.dart';
 import 'package:homi/services/get_homepage_banner.dart';
 import 'package:homi/services/get_screens.dart';
 import 'package:homi/services/get_user.dart';
@@ -23,7 +24,8 @@ class _ManageProfileState extends State<ManageProfile> {
   bool progressCode = true;
   String errorMessage ='';
   var js;
-
+  bool isRequest = true;
+  String s_id = '';
   getScreens()async{
     // try{
      js = await doGet('users/api/v2/screens');
@@ -47,7 +49,6 @@ class _ManageProfileState extends State<ManageProfile> {
     //   print("error timeline: $e");
     //   toast("$e, try again");
     // }
-
   }
   getHomePageBanner()async{
     // try{
@@ -82,6 +83,7 @@ class _ManageProfileState extends State<ManageProfile> {
       for(int i = 0; i < js["response"]["home_content"].length; i++){
         BannerResponse responseScreens = BannerResponse.fromJson(js["response"]["home_content"][i]);
         listHomeContent.add(responseScreens);
+        await getMyHistoryVideos();
         Navigator.pop(context);
         goTo(context, Index(initialIndex: 0,));
       }
@@ -95,6 +97,56 @@ class _ManageProfileState extends State<ManageProfile> {
     // }catch(e){
     //   print("error timeline: $e");
     //   toast("$e, try again");
+    // }
+
+  }
+
+  getMyHistoryVideos()async{
+    // try{
+    listHistoryData.clear();
+    var js = await doGet('medias/api/v2/continue_watching');
+    print("res recent: $js");
+    if(!js["error"] && js["response"].isNotEmpty){
+      for(int i = 0; i < js["response"].length; i++){
+        ResponseContinueData historyData = ResponseContinueData.fromJson(js["response"][i]);
+        listHistoryData.add(historyData);
+      }
+    }
+
+
+
+    // }catch(e){
+    //   print("error timeline: $e");
+    //   toast("$e, try again");
+    // }
+
+  }
+
+  requestProfile(String screenId)async{
+    // try{
+    var js = await doGet('users/api/v2/set-screen/$screenId');
+
+    print("res createDummy: $js");
+
+    // return;
+    if(js["status"] == 'success'){
+      toast(js["message"]);
+      setState((){
+        isRequest = true;
+        s_id = '';
+
+      });
+    } else{
+      setState((){
+        isRequest = true;
+        s_id = '';
+      });
+      showDialogOk(message: "${js["message"]}",context: context,status: false);
+    }
+    // }catch(e){
+    //   Navigator.pop(context);
+    //   print("error: $e");
+    //   showDialogOk(message: "$e",context: context,status: false);
     // }
 
   }
@@ -188,19 +240,54 @@ class _ManageProfileState extends State<ManageProfile> {
                                         child: sText("${listResponseScreens[index].name}",weight: FontWeight.bold),
                                       ),
                                       SizedBox(height: 5,),
-                                      GestureDetector(
-                                        onTap: (){
-                                          goTo(context, AddEdithProfile(responseScreens: listResponseScreens[index],));
-                                        },
-                                        child: Container(
-                                          padding: appPadding(5),
-                                          decoration: BoxDecoration(
-                                              color: dPurple,
-                                              borderRadius: BorderRadius.circular(5)
+                                      Row(
+                                        children: [
+                                          GestureDetector(
+                                            onTap: ()async{
+                                             var res = await goTo(context, AddEdithProfile(responseScreens: listResponseScreens[index],));
+                                             print("res:$res");
+                                              if(res != null && res){
+                                                setState((){
+                                                  listResponseScreens.clear();
+                                                  getScreens();
+                                                });
+                                              }
+                                            },
+                                            child: Container(
+                                              padding: appPadding(5),
+                                              decoration: BoxDecoration(
+                                                  color: dPurple,
+                                                  borderRadius: BorderRadius.circular(5)
+                                              ),
+                                              child: sText2("Edit Profile",weight: FontWeight.bold,color: Colors.white),
+                                            ),
                                           ),
-                                          child: sText2("Edit",weight: FontWeight.bold,color: Colors.white),
-                                        ),
+                                          SizedBox(width: 10,),
+                                          listResponseScreens[index].isDefault == 1 ?
+                                          GestureDetector(
+                                            onTap: ()async{
+                                            var res =  await goTo(context, AddEdithProfile(responseScreens: listResponseScreens[index],isEdit: false,));
+                                             if(res != null && res){
+                                               setState((){
+                                                 listResponseScreens.clear();
+                                                 getScreens();
+                                               });
+                                             }
+
+                                            },
+                                            child: Container(
+                                              padding: appPadding(5),
+                                              decoration: BoxDecoration(
+                                                  color: dPurple,
+                                                  borderRadius: BorderRadius.circular(5)
+                                              ),
+                                              child: sText2("Add New Profile",weight: FontWeight.bold,color: Colors.white),
+                                            ),
+                                          ) : Container(),
+                                        ],
+
                                       ),
+
                                     ],
                                   ),
                                 )
@@ -231,14 +318,21 @@ class _ManageProfileState extends State<ManageProfile> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Container(
-                                      child: sText("${listResponseScreens[index].name}",weight: FontWeight.bold),
+                                      child: sText("${listResponseScreens[index].name} ${listResponseScreens[index].deviceId == deviceId ? "(Current Device)" : ""}",weight: FontWeight.bold),
                                     ),
                                     SizedBox(height: 5,),
                                     Row(
                                       children: [
                                         GestureDetector(
-                                          onTap: (){
-                                            goTo(context, AddEdithProfile(responseScreens: listResponseScreens[index],));
+                                          onTap: ()async{
+                                         var res =  await  goTo(context, AddEdithProfile(responseScreens: listResponseScreens[index],));
+                                           print("res:$res");
+                                           if(res != null && res){
+                                             setState((){
+                                               listResponseScreens.clear();
+                                               getScreens();
+                                             });
+                                           }
                                           },
                                           child: Container(
                                             padding: appPadding(5),
@@ -246,17 +340,35 @@ class _ManageProfileState extends State<ManageProfile> {
                                                 color: dPurple,
                                                 borderRadius: BorderRadius.circular(5)
                                             ),
-                                            child: sText2("Edit",weight: FontWeight.bold,color: Colors.white),
+                                            child: sText2("Edit Profile",weight: FontWeight.bold,color: Colors.white),
                                           ),
                                         ),
                                         SizedBox(width: 10,),
-                                        Container(
-                                          padding: appPadding(5),
-                                          decoration: BoxDecoration(
-                                              color: dPurple,
-                                              borderRadius: BorderRadius.circular(5)
+                                        listResponseScreens[index].deviceId == deviceId ?
+                                            Container() :
+                                        GestureDetector(
+                                          onTap: (){
+                                            setState((){
+                                              isRequest = false;
+                                              s_id = listResponseScreens[index].id;
+                                            });
+                                            requestProfile(listResponseScreens[index].id);
+                                          },
+                                          child: Container(
+                                            padding: appPadding(5),
+                                            decoration: BoxDecoration(
+                                                color:  s_id == listResponseScreens[index].id ? Colors.grey[400] : dPurple,
+                                                borderRadius: BorderRadius.circular(5)
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                sText2("Request ",weight: FontWeight.bold,color: Colors.white),
+                                                SizedBox(width: 10,),
+                                                !isRequest &&  s_id == listResponseScreens[index].id ? progress() : Container()
+                                              ],
+                                            ),
                                           ),
-                                          child: sText2("Remove Profile",weight: FontWeight.bold,color: Colors.white),
                                         ),
                                       ],
                                     ),

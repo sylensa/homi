@@ -22,7 +22,8 @@ import 'package:video_box/video_box.dart';
 class MoviePage extends StatefulWidget {
   String slug;
   String title;
-   MoviePage({this.slug = '',this.title = ''});
+  int secendsWatch;
+   MoviePage({this.slug = '',this.title = '',this.secendsWatch = 0});
 
   @override
   _MoviePageState createState() => _MoviePageState();
@@ -38,6 +39,8 @@ class _MoviePageState extends State<MoviePage> {
   bool isPlay = false;
   bool isTrailer = true;
   bool progressCode = false;
+  bool isProgress = true;
+  String isProgressError = "";
   bool loading = false;
   double progres = 0;
   bool isComment = false;
@@ -104,12 +107,21 @@ class _MoviePageState extends State<MoviePage> {
       });
     }else{
       toast(js["message"]);
+      setState(() {
+        isProgress = false;
+        isProgressError = js["message"];
+      });
     }
 
-
     }catch(e){
+      setState(() {
+       isProgress = false;
+       isProgressError = e.toString();
+      });
       print("error timeline: $e");
+
       toast("$e, try again");
+
     }
 
   }
@@ -628,7 +640,7 @@ class _MoviePageState extends State<MoviePage> {
         if(_controller!.value.position.inSeconds == 30){
           print("pSeconds value:${_controller!.value.position.inSeconds}");
         }
-        secondsWatched = _controller!.value.position.inSeconds;
+        widget.secendsWatch = _controller!.value.position.inSeconds;
       });
     setState(() {
 
@@ -673,6 +685,7 @@ class _MoviePageState extends State<MoviePage> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    newCurrentPosition = Duration(seconds: widget.secendsWatch);
     getMovieDetails();
   }
 
@@ -909,19 +922,6 @@ class _MoviePageState extends State<MoviePage> {
                                     movie_details[0].videoInfo!.price! == 0 ?
                                     GestureDetector(
                                       onTap: () async {
-                                        // if(responseScreenUser.isNotEmpty){
-                                        //   if(responseUserData[0].isSubscribed == 1){
-                                        //     setState(() {
-                                        //       isPlay = true;
-                                        //     });
-                                        //     _getValuesAndPlay(movie_details[0].videoInfo!.hlsPlaylistUrl!);
-                                        //   }else{
-                                        //     goTo(context, PremiumPage());
-                                        //   }
-                                        // }else{
-                                        //   showDialogOk(message: "You've to login to access this feature",context: context,target: LoginPage(),replace: false,status: true);
-                                        //   goTo(context, LoginPage());
-                                        // }
                                         if( checkIfLogin(isPlay: true)){
                                           _getValuesAndPlay(movie_details[0].videoInfo!.hlsPlaylistUrl!);
                                         }
@@ -939,7 +939,7 @@ class _MoviePageState extends State<MoviePage> {
                                             Icon(Icons.play_arrow,
                                               color: Colors.white,),
                                             sText2(
-                                                "Play movie", color: Colors.white,
+                                                "${widget.secendsWatch == 0 ? "Play movie" :"Continue watching"}", color: Colors.white,
                                                 weight: FontWeight.bold),
                                             SizedBox(width: 5,),
                                             snapshot.connectionState == ConnectionState.done ? Container() : isPlay ? progress(size: 10) : Container()
@@ -1278,9 +1278,14 @@ class _MoviePageState extends State<MoviePage> {
               ],
             )
                 :
+            progressCode ?
             Column(
               children: [
                 Expanded(child: Center(child: progress(),)),
+              ],
+            ) :  Column(
+              children: [
+                Expanded(child: Center(child: sText("$isProgressError"),)),
               ],
             ),
           ),

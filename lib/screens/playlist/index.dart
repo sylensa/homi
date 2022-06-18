@@ -161,6 +161,7 @@ class _MyPlaylistMoviesState extends State<MyPlaylistMovies> {
                             ),
                           ),
                           Positioned(
+
                             right: 0,
                             child: Container(
                                 padding: EdgeInsets.only(left: 5,top: 3,bottom: 5,right: 0),

@@ -51,7 +51,9 @@ class _HomePageState extends State<HomePage> {
 
   }
 
-
+  progressLength(int per){
+    return ((per/100) * 200).abs();
+  }
 
   @override
   void initState() {
@@ -195,58 +197,60 @@ class _HomePageState extends State<HomePage> {
                       );
                     }),
 
-                // Column(
-                //   crossAxisAlignment: CrossAxisAlignment.start,
-                //   children: [
-                //     SizedBox(height: 10,),
-                //     Container(
-                //       margin: leftPadding(10),
-                //       child: sText("Continue Watching",weight: FontWeight.bold),
-                //     ),
-                //     SizedBox(height: 10,),
-                //     Container(
-                //       height: 150,
-                //       child: ListView.builder(
-                //           itemCount: 10,
-                //           shrinkWrap: true,
-                //           physics: ClampingScrollPhysics(),
-                //           scrollDirection: Axis.horizontal,
-                //           itemBuilder: (BuildContext context, int index){
-                //             return  GestureDetector(
-                //               onTap: (){
-                //                 goTo(context, MoviePage(url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",));
-                //               },
-                //               child: Row(
-                //                 children: [
-                //                   SizedBox(width: 10,),
-                //                   Stack(
-                //                     children: [
-                //                       ClipRRect(
-                //                         borderRadius: BorderRadius.circular(5.0),
-                //                         child: Container(
-                //                           height: 150,
-                //                           child: Image.asset("assets/images/pabi at ledge.jpg",width: 200,fit: BoxFit.fitHeight,),
-                //                         ),
-                //                       ),
-                //                       Positioned(
-                //                         bottom: 0,
-                //                         child: Container(
-                //                             width: 200,
-                //                             height: 5,
-                //                             decoration: BoxDecoration(
-                //                                 color: Colors.red,
-                //                             ),
-                //                         ),
-                //                       )
-                //                     ],
-                //                   ),
-                //                 ],
-                //               ),
-                //             );
-                //           }),
-                //     ),
-                //   ],
-                // ),
+                listHistoryData.isNotEmpty ?
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 10,),
+                    Container(
+                      margin: leftPadding(10),
+                      child: sText("Continue Watching",weight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10,),
+                    Container(
+                      height: 150,
+                      child: ListView.builder(
+                          itemCount: listHistoryData.length,
+                          shrinkWrap: true,
+                          physics: ClampingScrollPhysics(),
+                          scrollDirection: Axis.horizontal,
+                          itemBuilder: (BuildContext context, int index){
+                            return  GestureDetector(
+                              onTap: (){
+                                goTo(context, MoviePage(slug: listHistoryData[index].video!.slug!, title: listHistoryData[index].video!.title!,secendsWatch: listHistoryData[index].seconds.toInt(),));
+
+                              },
+                              child: Row(
+                                children: [
+                                  SizedBox(width: 10,),
+                                  Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(5.0),
+                                        child: Container(
+                                          height: 150,
+                                          child: displayImage("${listHistoryData[index].video!.thumbnailImage}",width: 200,radius: 0),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 0,
+                                        child: Container(
+                                            width: progressLength(listHistoryData[index].progressPercentage!),
+                                            height: 5,
+                                            decoration: BoxDecoration(
+                                                color: Colors.red,
+                                            ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                    ),
+                  ],
+                ) : Container(),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
