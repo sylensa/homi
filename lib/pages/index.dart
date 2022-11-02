@@ -1,12 +1,16 @@
 import 'package:easy_dynamic_theme/easy_dynamic_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:homi/controller/main_controller.dart';
 import 'package:homi/helper/custom_theme_data.dart';
 import 'package:homi/helper/helper.dart';
+import 'package:homi/model/download_update.dart';
 import 'package:homi/screens/category/index.dart';
 import 'package:homi/screens/home/index.dart';
 import 'package:homi/screens/menu/index.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
+import 'package:wakelock/wakelock.dart';
 
 
 
@@ -19,10 +23,26 @@ class Index extends StatefulWidget {
 }
 
 class _IndexState extends State<Index> {
-
+  late MainController mainController;
   @override
   void initState() {
+    mainController = MainController(
+      context,
+      context.read<DownloadUpdate>(),
+    );
     super.initState();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (context.read<DownloadUpdate>().isDownloading) {
+        Wakelock.enable();
+      }
+    }
+    if (state == AppLifecycleState.paused) {
+      Wakelock.disable();
+    }
   }
 
 
@@ -67,7 +87,7 @@ class _IndexState extends State<Index> {
           ),
           body:  TabBarView(
             children: [
-              HomePage(),
+              HomePage(controller: mainController,),
               CategoryPage(),
               MenuPage(),
             ],

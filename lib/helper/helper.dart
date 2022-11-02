@@ -430,7 +430,7 @@ showDialogOk({String? message,BuildContext? context,Widget? target,bool? status,
         title: new Text("Alert"),
         content: new Text(message!),
         actions: <Widget>[
-          new FlatButton(
+          new MaterialButton(
             child: new Text("Ok"),
             onPressed: () {
               if(status!){
@@ -458,7 +458,7 @@ showSuccessfulDialog({String? message,BuildContext? context,Widget? target,bool?
         title: new Text("Alert"),
         content: new Text(message!),
         actions: <Widget>[
-          new FlatButton(
+          new MaterialButton(
             child: new Text("Ok"),
             onPressed: () {
               if(status!){
@@ -487,13 +487,13 @@ showDialogYesNo(String message,String alert,BuildContext context,Widget target) 
         content: new Text(message),
         actions: <Widget>[
           // usually buttons at the bottom of the dialog
-          new FlatButton(
+          new MaterialButton(
             child: new Text("No"),
             onPressed: () {
               Navigator.pop(context);
             },
           ),
-          new FlatButton(
+          new MaterialButton(
             child: new Text("Yes"),
             onPressed: () {
               goTo(context, target);
@@ -744,7 +744,11 @@ themeAppBarColors(){
 popUpMenu({String movieId = "",BuildContext? context}){
   return  PopupMenuButton(onSelected: (result) {
     if(result == "playlist"){
-      goTo(context!, ListPlaylist(responseScreens: responseScreenUser[0],slug: movieId,));
+      if(responseScreenUser.isNotEmpty){
+        goTo(context!, ListPlaylist(responseScreens: responseScreenUser[0],slug: movieId,));
+      }else{
+        toast("Kindly login first");
+      }
     }
   },
     padding: bottomPadding(0),

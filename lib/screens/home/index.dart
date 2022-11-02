@@ -1,13 +1,16 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:homi/controller/main_controller.dart';
 import 'package:homi/helper/helper.dart';
 import 'package:homi/helper/video_feed_player.dart';
 import 'package:homi/screens/movie/index.dart';
+import 'package:homi/screens/series/index.dart';
 import 'package:video_box/video.controller.dart';
 import 'package:video_box/video_box.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  MainController? controller;
+   HomePage({this.controller});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -146,7 +149,7 @@ class _HomePageState extends State<HomePage> {
                           background: GestureDetector(
                             onTap: (){
                               print("hello:${listBannerData[0].data[index].title}");
-                              goTo(context, MoviePage(slug: listBannerData[0].data[index].slug,title: listBannerData[0].data[index].title,));
+                              goTo(context, MoviePage(slug: listBannerData[0].data[index].slug,title: listBannerData[0].data[index].title,controller: widget.controller,));
                             },
                             child: Container(
                                 width: appWidth(context),
@@ -217,7 +220,13 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (BuildContext context, int index){
                             return  GestureDetector(
                               onTap: (){
-                                goTo(context, MoviePage(slug: listHistoryData[index].video!.slug!, title: listHistoryData[index].video!.title!,secendsWatch: listHistoryData[index].seconds.toInt(),));
+                                if( listHistoryData[index].video!.isWebseries == 1){
+                                  goTo(context, SeriesPage(slug: listHistoryData[index].video!.slug!, title: listHistoryData[index].video!.title!));
+
+                                }else{
+                                  goTo(context, MoviePage(slug: listHistoryData[index].video!.slug!, title: listHistoryData[index].video!.title!,secendsWatch: listHistoryData[index].seconds.toInt(),controller: widget.controller));
+
+                                }
 
                               },
                               child: Row(
@@ -271,7 +280,7 @@ class _HomePageState extends State<HomePage> {
                             return  GestureDetector(
                               onTap: (){
                                 print("hello:${listNewData[0].data[index].title}");
-                                goTo(context, MoviePage(slug: listNewData[0].data[index].slug,title: listNewData[0].data[index].title,));
+                                goTo(context, MoviePage(slug: listNewData[0].data[index].slug,title: listNewData[0].data[index].title,controller: widget.controller));
                               },
                               child: Row(
                                 children: [
@@ -326,7 +335,12 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (BuildContext context, int index){
                             return  GestureDetector(
                               onTap: (){
-                                goTo(context, MoviePage(slug: listHomeContent[i].data[index].slug,title: listHomeContent[i].data[index].title,));
+                                if(listHomeContent[i].categoryName.toLowerCase() == "tv series"){
+                                  goTo(context, SeriesPage(slug: listHomeContent[i].data[index].slug,title: listHomeContent[i].data[index].title,));
+                                }else{
+                                  goTo(context, MoviePage(slug: listHomeContent[i].data[index].slug,title: listHomeContent[i].data[index].title,controller: widget.controller));
+
+                                }
                               },
                               child: Row(
                                 children: [

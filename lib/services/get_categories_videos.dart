@@ -185,7 +185,7 @@ class VideoData {
   String posterImage;
   int isLive;
   int isPremium;
-  int price;
+  var price;
   String trailerHlsUrl;
   String trailerStatus;
   String publishedOn;

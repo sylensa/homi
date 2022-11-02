@@ -84,9 +84,11 @@ class _ManageProfileState extends State<ManageProfile> {
         BannerResponse responseScreens = BannerResponse.fromJson(js["response"]["home_content"][i]);
         listHomeContent.add(responseScreens);
         await getMyHistoryVideos();
-        Navigator.pop(context);
-        goTo(context, Index(initialIndex: 0,));
       }
+      Navigator.pop(context);
+
+      goTo(context, Index(initialIndex: 0,));
+
 
     }else{
       Navigator.pop(context);

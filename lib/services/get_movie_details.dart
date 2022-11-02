@@ -50,6 +50,7 @@ class Responses {
     required this.seasons,
     required this.paymentInfo,
     required this.videoMetaData,
+    required this.isDownloading,
   });
 
   VideoInfo? videoInfo;
@@ -59,6 +60,7 @@ class Responses {
   List<dynamic>? seasons;
   PaymentInfo? paymentInfo;
   dynamic videoMetaData;
+  bool isDownloading;
 
   factory Responses.fromJson(Map<String, dynamic> json) => Responses(
     videoInfo: json["video_info"] == null ? null : VideoInfo.fromJson(json["video_info"]),
@@ -68,6 +70,7 @@ class Responses {
     seasons: json["seasons"] == null ? null : List<dynamic>.from(json["seasons"].map((x) => x)),
     paymentInfo: json["payment_info"] == null ? null : PaymentInfo.fromJson(json["payment_info"]),
     videoMetaData: json["video_meta_data"],
+    isDownloading: json["is_downloading"] ?? false,
   );
 
   Map<String, dynamic> toJson() => {
@@ -78,6 +81,7 @@ class Responses {
     "seasons": seasons == null ? null : List<dynamic>.from(seasons!.map((x) => x)),
     "payment_info": paymentInfo == null ? null : paymentInfo!.toJson(),
     "video_meta_data": videoMetaData,
+    "is_downloading": isDownloading ?? false,
   };
 }
 
